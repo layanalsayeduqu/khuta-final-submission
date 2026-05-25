@@ -1,0 +1,16 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    { "type": "Feature", "properties": { "id": 301, "name_ar": "دورات مياه", "type": "restroom" }, "geometry": { "type": "Point", "coordinates": [39.122445, 22.090175] } },
+    { "type": "Feature", "properties": { "id": 302, "name_ar": "دورات مياه", "type": "restroom" }, "geometry": { "type": "Point", "coordinates": [39.123055, 22.090175] } },
+    { "type": "Feature", "properties": { "id": 303, "name_ar": "دورات مياه", "type": "restroom" }, "geometry": { "type": "Point", "coordinates": [39.122445, 22.089325] } },
+    { "type": "Feature", "properties": { "id": 304, "name_ar": "دورات مياه", "type": "restroom" }, "geometry": { "type": "Point", "coordinates": [39.123055, 22.089325] } },
+    { "type": "Feature", "properties": { "id": 305, "name_ar": "مطاعم ومشروبات", "type": "food" }, "geometry": { "type": "Point", "coordinates": [39.12275, 22.090205] } },
+    { "type": "Feature", "properties": { "id": 306, "name_ar": "مطاعم ومشروبات", "type": "food" }, "geometry": { "type": "Point", "coordinates": [39.12275, 22.089295] } },
+    
+    { "type": "Feature", "properties": { "id": 307, "name_ar": "خدمات طبية", "type": "medical" }, "geometry": { "type": "Point", "coordinates": [39.12328, 22.08993] } },
+    { "type": "Feature", "properties": { "id": 308, "name_ar": "خدمات طبية", "type": "medical" }, "geometry": { "type": "Point", "coordinates": [39.12218, 22.08993] } },
+    
+    { "type": "Feature", "properties": { "id": 309, "name_ar": "مصلى", "type": "prayer" }, "geometry": { "type": "Point", "coordinates": [39.122625, 22.089275] } }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    { "type": "Feature", "properties": { "id": "P1", "type": "parking", "color": "#b8b8b8", "height": 0.08, "base": 0 }, "geometry": { "type": "Polygon", "coordinates": [[[39.12145,22.08945],[39.12182,22.08945],[39.12182,22.09005],[39.12145,22.09005],[39.12145,22.08945]]] } },
+    { "type": "Feature", "properties": { "id": "P2", "type": "parking", "color": "#b8b8b8", "height": 0.08, "base": 0 }, "geometry": { "type": "Polygon", "coordinates": [[[39.12368,22.08945],[39.12405,22.08945],[39.12405,22.09005],[39.12368,22.09005],[39.12368,22.08945]]] } },
+    { "type": "Feature", "properties": { "id": "ROAD1", "type": "road", "color": "#6f6f6f", "height": 0.04, "base": 0 }, "geometry": { "type": "Polygon", "coordinates": [[[39.12135,22.08930],[39.12415,22.08930],[39.12415,22.08938],[39.12135,22.08938],[39.12135,22.08930]]] } },
+    { "type": "Feature", "properties": { "id": "ROAD2", "type": "road", "color": "#6f6f6f", "height": 0.04, "base": 0 }, "geometry": { "type": "Polygon", "coordinates": [[[39.12135,22.09012],[39.12415,22.09012],[39.12415,22.09020],[39.12135,22.09020],[39.12135,22.09012]]] } },
+   { "type": "Feature", "properties": { "id": "T1", "type": "tree" }, "geometry": { "type": "Point", "coordinates": [39.12155,22.09025] } },
+{ "type": "Feature", "properties": { "id": "T1", "type": "tree" }, "geometry": { "type": "Point", "coordinates": [39.12145,22.09038] } },
+{ "type": "Feature", "properties": { "id": "T2", "type": "tree" }, "geometry": { "type": "Point", "coordinates": [39.12170,22.09042] } },
+{ "type": "Feature", "properties": { "id": "T3", "type": "tree" }, "geometry": { "type": "Point", "coordinates": [39.12195,22.09045] } },
+{ "type": "Feature", "properties": { "id": "T4", "type": "tree" }, "geometry": { "type": "Point", "coordinates": [39.12225,22.09047] } },
+{ "type": "Feature", "properties": { "id": "T5", "type": "tree" }, "geometry": { "type": "Point", "coordinates": [39.12255,22.09048] } },
+{ "type": "Feature", "properties": { "id": "T6", "type": "tree" }, "geometry": { "type": "Point", "coordinates": [39.12285,22.09048] } },
+{ "type": "Feature", "properties": { "id": "T7", "type": "tree" }, "geometry": { "type": "Point", "coordinates": [39.12315,22.09047] } },
+{ "type": "Feature", "properties": { "id": "T8", "type": "tree" }, "geometry": { "type": "Point", "coordinates": [39.12345,22.09045] } },
+{ "type": "Feature", "properties": { "id": "T9", "type": "tree" }, "geometry": { "type": "Point", "coordinates": [39.12375,22.09042] } },
+{ "type": "Feature", "properties": { "id": "T10", "type": "tree" }, "geometry": { "type": "Point", "coordinates": [39.12400,22.09038] } },
+
+{ "type": "Feature", "properties": { "id": "T11", "type": "tree" }, "geometry": { "type": "Point", "coordinates": [39.12145,22.08902] } },
+{ "type": "Feature", "properties": { "id": "T12", "type": "tree" }, "geometry": { "type": "Point", "coordinates": [39.12175,22.08899] } },
+{ "type": "Feature", "properties": { "id": "T13", "type": "tree" }, "geometry": { "type": "Point", "coordinates": [39.12205,22.08897] } },
+{ "type": "Feature", "properties": { "id": "T14", "type": "tree" }, "geometry": { "type": "Point", "coordinates": [39.12235,22.08895] } },
+{ "type": "Feature", "properties": { "id": "T15", "type": "tree" }, "geometry": { "type": "Point", "coordinates": [39.12265,22.08895] } },
+{ "type": "Feature", "properties": { "id": "T16", "type": "tree" }, "geometry": { "type": "Point", "coordinates": [39.12295,22.08895] } },
+{ "type": "Feature", "properties": { "id": "T17", "type": "tree" }, "geometry": { "type": "Point", "coordinates": [39.12325,22.08897] } },
+{ "type": "Feature", "properties": { "id": "T18", "type": "tree" }, "geometry": { "type": "Point", "coordinates": [39.12355,22.08899] } },
+{ "type": "Feature", "properties": { "id": "T19", "type": "tree" }, "geometry": { "type": "Point", "coordinates": [39.12128,22.08975] } },
+{ "type": "Feature", "properties": { "id": "T20", "type": "tree" }, "geometry": { "type": "Point", "coordinates": [39.12422,22.08975] } }
+  ]
+}

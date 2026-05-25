@@ -1,0 +1,14 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    { "type": "Feature", "properties": { "id": "F301", "type": "restroom", "name_ar": "دورات مياه", "height": 4.0, "base": 0, "color": "#1e88e5" }, "geometry": { "type": "Polygon", "coordinates": [[[39.12242,22.09015],[39.12247,22.09015],[39.12247,22.09020],[39.12242,22.09020],[39.12242,22.09015]]] } },
+    { "type": "Feature", "properties": { "id": "F302", "type": "restroom", "name_ar": "دورات مياه", "height": 4.0, "base": 0, "color": "#1e88e5" }, "geometry": { "type": "Polygon", "coordinates": [[[39.12303,22.09015],[39.12308,22.09015],[39.12308,22.09020],[39.12303,22.09020],[39.12303,22.09015]]] } },
+    { "type": "Feature", "properties": { "id": "F303", "type": "restroom", "name_ar": "دورات مياه", "height": 4.0, "base": 0, "color": "#1e88e5" }, "geometry": { "type": "Polygon", "coordinates": [[[39.12242,22.08930],[39.12247,22.08930],[39.12247,22.08935],[39.12242,22.08935],[39.12242,22.08930]]] } },
+    { "type": "Feature", "properties": { "id": "F304", "type": "restroom", "name_ar": "دورات مياه", "height": 4.0, "base": 0, "color": "#1e88e5" }, "geometry": { "type": "Polygon", "coordinates": [[[39.12303,22.08930],[39.12308,22.08930],[39.12308,22.08935],[39.12303,22.08935],[39.12303,22.08930]]] } },
+    { "type": "Feature", "properties": { "id": "F307", "type": "medical", "name_ar": "خدمات طبية", "height": 4.0, "base": 0, "color": "#2e7d32" }, "geometry": { "type": "Polygon", "coordinates": [[[39.12325,22.08990],[39.12331,22.08990],[39.12331,22.08996],[39.12325,22.08996],[39.12325,22.08990]]] }  },
+    { "type": "Feature", "properties": { "id": "F308", "type": "medical", "name_ar": "خدمات طبية", "height": 4.0, "base": 0, "color": "#2e7d32" }, "geometry": { "type": "Polygon", "coordinates": [[[39.12215,22.08990],[39.12221,22.08990],[39.12221,22.08996],[39.12215,22.08996],[39.12215,22.08990]]] } },
+    { "type": "Feature", "properties": { "id": "F305", "type": "food", "name_ar": "مطاعم ومشروبات", "height": 4.5, "base": 0, "color": "#d84315" }, "geometry": { "type": "Polygon", "coordinates": [[[39.12272,22.09018],[39.12278,22.09018],[39.12278,22.09023],[39.12272,22.09023],[39.12272,22.09018]]] } },
+    { "type": "Feature", "properties": { "id": "F306", "type": "food", "name_ar": "مطاعم ومشروبات", "height": 4.5, "base": 0, "color": "#d84315" }, "geometry": { "type": "Polygon", "coordinates": [[[39.12272,22.08927],[39.12278,22.08927],[39.12278,22.08932],[39.12272,22.08932],[39.12272,22.08927]]] } },
+    { "type": "Feature", "properties": { "id": "F309", "type": "prayer", "name_ar": "مصلى", "height": 3.5, "base": 0, "color": "#6D4C41" }, "geometry": { "type": "Polygon", "coordinates": [[[39.12260,22.08925],[39.12265,22.08925],[39.12265,22.08930],[39.12260,22.08930],[39.12260,22.08925]]] } }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    { "type": "Feature", "properties": { "id": "G1", "type": "gate", "name": "Gate 1", "part": "gate_2d" }, "geometry": { "type": "Point", "coordinates": [39.12245,22.08914] } },
+    { "type": "Feature", "properties": { "id": "G2", "type": "gate", "name": "Gate 2", "part": "gate_2d" }, "geometry": { "type": "Point", "coordinates": [39.12305,22.08914] } },
+    { "type": "Feature", "properties": { "id": "G3", "type": "gate", "name": "Gate 3", "part": "gate_2d" }, "geometry": { "type": "Point", "coordinates": [39.12355,22.08975] } },
+    { "type": "Feature", "properties": { "id": "G4", "type": "gate", "name": "Gate 4", "part": "gate_2d" }, "geometry": { "type": "Point", "coordinates": [39.12305,22.09036] } },
+    { "type": "Feature", "properties": { "id": "G5", "type": "gate", "name": "Gate 5", "part": "gate_2d" }, "geometry": { "type": "Point", "coordinates": [39.12245,22.09036] } },
+    { "type": "Feature", "properties": { "id": "G6", "type": "gate", "name": "Gate 6", "part": "gate_2d" }, "geometry": { "type": "Point", "coordinates": [39.12195,22.08975] } },
+{ "type": "Feature", "properties": { "id": "E1", "type": "exit", "name": "Emergency Exit", "part": "gate_2d" }, "geometry": { "type": "Point", "coordinates": [39.12210,22.08937] } },
+{ "type": "Feature", "properties": { "id": "E2", "type": "exit", "name": "Emergency Exit", "part": "gate_2d" }, "geometry": { "type": "Point", "coordinates": [39.12340,22.08937] } },
+{ "type": "Feature", "properties": { "id": "E3", "type": "exit", "name": "Emergency Exit", "part": "gate_2d" }, "geometry": { "type": "Point", "coordinates": [39.12210,22.09013] } },
+{ "type": "Feature", "properties": { "id": "E4", "type": "exit", "name": "Emergency Exit", "part": "gate_2d" }, "geometry": { "type": "Point", "coordinates": [39.12340,22.09013] } }
+  ]
+}
