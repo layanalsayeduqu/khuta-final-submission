@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, EmailStr
 from jose import jwt
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import os
 
 from database import get_db_connection
@@ -62,7 +62,8 @@ def login_user(data: LoginRequest):
         payload = {
             "user_id": user["id"],
             "email": user["email"],
-            "exp": datetime.utcnow() + timedelta(hours=2)
+            "exp": datetime.now(timezone.utc) + timedelta(hours=2)
+
         }
 
         token = jwt.encode(
