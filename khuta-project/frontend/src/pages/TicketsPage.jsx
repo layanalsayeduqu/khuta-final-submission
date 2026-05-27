@@ -7,37 +7,55 @@ const FALLBACK_MATCHES = [
     {
         id: 1,
         home_team: "Al Hilal",
+        home_team_ar: "الهلال",
         away_team: "Al Nassr",
+        away_team_ar: "النصر",
         date: "Saturday 3 May",
+        date_ar: "السبت 3 مايو",
         time: "8:00 PM",
-        stadium_name: "International Stadium",
+        time_ar: "8:00 مساءً",
+        stadium_name: "Prince Faisal Stadium",
+        stadium_name_ar: "ملعب الأمير فيصل",
         base_price: 75
     },
     {
         id: 2,
         home_team: "Al Ittihad",
+        home_team_ar: "الاتحاد",
         away_team: "Al Ahli",
+        away_team_ar: "الأهلي",
         date: "Sunday 4 May",
+        date_ar: "الأحد 4 مايو",
         time: "6:00 PM",
-        stadium_name: "Mrsool Park",
+        time_ar: "6:00 مساءً",
+        stadium_name: "Prince Faisal Stadium",
+        stadium_name_ar: "ملعب الأمير فيصل",
         base_price: 60
     },
     {
         id: 3,
         home_team: "Al Shabab",
+        home_team_ar: "الشباب",
         away_team: "Al Raed",
+        away_team_ar: "الرائد",
         date: "Monday 5 May",
+        date_ar: "الاثنين 5 مايو",
         time: "9:00 PM",
+        time_ar: "9:00 مساءً",
         stadium_name: "Prince Faisal Stadium",
+        stadium_name_ar: "ملعب الأمير فيصل",
         base_price: 50
     }
 ];
 
-export default function TicketsPage({
-    goToSeatMap,
-    goToBookings
-}) {
-    const { t } = useLanguage();
+export default function TicketsPage() {
+    const { t, lang } = useLanguage();
+
+    // Returns the Arabic field if lang is "ar" and the field exists, otherwise falls back to the English field.
+    const localize = (match, field) =>
+        lang === "ar" && match[`${field}_ar`]
+            ? match[`${field}_ar`]
+            : match[field];
     const navigate = useNavigate();
 
     const [matches, setMatches] = useState(FALLBACK_MATCHES);
@@ -48,25 +66,14 @@ export default function TicketsPage({
 
     const fetchMatches = async () => {
         try {
-            const response = await API.get("/matches/upcoming");
+            const response = await API.get("/api/tickets/matches");
 
-            const apiMatches = response.data.matches || [];
+            const apiMatches = Array.isArray(response.data)
+                ? response.data
+                : (response.data.matches || []);
 
             if (apiMatches.length > 0) {
-                const formattedMatches = apiMatches.slice(0, 12).map((match) => ({
-                    id: match.id,
-                    home_team: match.home_team,
-                    away_team: match.away_team,
-                    date: new Date(match.date).toLocaleDateString(),
-                    time: new Date(match.date).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit"
-                    }),
-                    stadium_name: match.league || "Saudi League",
-                    base_price: 75
-                }));
-
-                setMatches(formattedMatches);
+                setMatches(apiMatches.slice(0, 12));
             }
 
         } catch (error) {
@@ -77,11 +84,11 @@ export default function TicketsPage({
     function toSeatMapInfo(match) {
         return {
             id: match.id,
-            home: match.home_team,
-            away: match.away_team,
-            date: match.date,
-            time: match.time,
-            stadium: match.stadium_name,
+            home: localize(match, "home_team"),
+            away: localize(match, "away_team"),
+            date: localize(match, "date"),
+            time: localize(match, "time"),
+            stadium: localize(match, "stadium_name"),
             price: match.base_price
         };
     }
@@ -125,26 +132,26 @@ export default function TicketsPage({
                         >
 
                             <div className="teams">
-                                {match.home_team}
+                                {localize(match, "home_team")}
 
                                 <span className="vs">
-                                    VS
+                                    {lang === "ar" ? "ضد" : "VS"}
                                 </span>
 
-                                {match.away_team}
+                                {localize(match, "away_team")}
                             </div>
 
                             <div className="ticket-info">
                                 <div>
-                                    📅 {match.date}
+                                    📅 {localize(match, "date")}
                                 </div>
 
                                 <div>
-                                    🕐 {match.time}
+                                    🕐 {localize(match, "time")}
                                 </div>
 
                                 <div>
-                                    🏟️ {match.stadium_name}
+                                    🏟️ {localize(match, "stadium_name")}
                                 </div>
                             </div>
 
@@ -182,14 +189,6 @@ export default function TicketsPage({
                     ))}
 
                 </div>
-
-                <button
-                    type="button"
-                    className="secondary-btn"
-                    onClick={goToBookings}
-                >
-                    📋 {t.myBookings}
-                </button>
 
             </section>
 

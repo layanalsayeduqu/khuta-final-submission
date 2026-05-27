@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { QRCodeSVG } from "qrcode.react";
+import { useLanguage } from "../context/LanguageContext";
 
 function MyBookings() {
     const navigate = useNavigate();
+    const { t } = useLanguage();
     const token = localStorage.getItem("token");
 
     const [tickets, setTickets] = useState([]);
@@ -34,10 +37,9 @@ function MyBookings() {
         return (
             <div className="page">
                 <div className="empty-msg">
-                    يجب تسجيل الدخول أولاً
                     <br />
                     <button onClick={() => navigate("/login")}>
-                        تسجيل الدخول
+                        {t.login}
                     </button>
                 </div>
             </div>
@@ -47,14 +49,14 @@ function MyBookings() {
     return (
         <div className="page">
             <div className="bookings-header">
-                <h1 className="bookings-title">حجوزاتي</h1>
-                <p className="bookings-sub">جميع التذاكر التي قمت بحجزها</p>
+                <h1 className="bookings-title">{t.myBookings}</h1>
+                <p className="bookings-sub">{t.myBookingsSub}</p>
             </div>
 
             {loading ? (
-                <div className="empty-msg">جاري تحميل الحجوزات...</div>
+                <div className="empty-msg">{t.loading}</div>
             ) : tickets.length === 0 ? (
-                <div className="empty-msg">لا توجد لديك حجوزات حالياً</div>
+                <div className="empty-msg">{t.noTicketsFound}</div>
             ) : (
                 <div className="tickets-grid">
                     {tickets.map((ticket) => (
@@ -74,16 +76,21 @@ function MyBookings() {
                                 <div>📍 {ticket.stadium_name}</div>
                                 <div>📅 {ticket.match_date}</div>
                                 <div>🕐 {ticket.match_time}</div>
-                                <div>🎫 المقعد: {ticket.seat_number}</div>
-                                <div>💰 {ticket.price} ريال</div>
+                                <div>🎫 {t.seatNumber}: {ticket.seat_number}</div>
+                                <div>💰 {ticket.price} SAR</div>
                             </div>
 
-                            <div className="qr-section">
-                                <img
-                                    src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${ticket.qr_token}`}
-                                    alt="QR"
-                                />
-                            </div>
+                            {ticket.qr_token && (
+                                <div className="qr-section">
+                                    <QRCodeSVG
+                                        value={`TICKET:${ticket.qr_token}`}
+                                        size={140}
+                                        level="H"
+                                        marginSize={2}
+                                    />
+                                    <p className="qr-hint">{t.scanAtGate}</p>
+                                </div>
+                            )}
                         </div>
                     ))}
                 </div>

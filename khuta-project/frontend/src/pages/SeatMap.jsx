@@ -251,47 +251,31 @@ export default function SeatMap() {
         return Math.round((selectedMatch?.price || 75) * multiplier);
     };
 
-   const [error, setError] = useState("");
+    const [error, setError] = useState("");
 
-        const handleContinue = () => {
+    const handleContinue = () => {
+        setError("");
 
-            setError("");
+        const seatData = selectedList.map((seat) => ({
+            id: seat.seat_id,
+            dbId: seat.dbId ?? null,
+            price: seatPrice(seat),
+            cat: STAND_CATEGORIES[seat.stand]?.label || seat.stand
+        }));
 
-            const missingSeat = selectedList.find(
-                (seat) => !seat.dbId
-            );
-
-            if (missingSeat) {
-
-                setError(
-                    `Seat database ID is missing for ${missingSeat.seat_id}`
-                );
-
-                return;
-            }
-
-            const seatData = selectedList.map((seat) => ({
-                id: seat.seat_id,
-                dbId: seat.dbId,
-                price: seatPrice(seat),
-                cat:
-                    STAND_CATEGORIES[seat.stand]?.label ||
-                    seat.stand
-            }));
-
-            navigate("/payment", {
-                state: {
-                    booking: {
-                        seats: seatData,
-                        match: selectedMatch,
-                        total: seatData.reduce(
-                            (sum, seat) => sum + seat.price,
-                            0
-                        )
-                    }
+        navigate("/payment", {
+            state: {
+                booking: {
+                    seats: seatData,
+                    match: selectedMatch,
+                    total: seatData.reduce(
+                        (sum, seat) => sum + seat.price,
+                        0
+                    )
                 }
-            });
-        };
+            }
+        });
+    };
 
     return (
         <main className="page">
@@ -629,12 +613,13 @@ export default function SeatMap() {
                                 onClick={handleContinue}
                             >
                                 {t.confirmPayment} →
-                                {error && (
+                            </button>
+
+                            {error && (
                                 <p className="field-error">
                                     {error}
                                 </p>
                             )}
-                            </button>
 
 
                             <button
