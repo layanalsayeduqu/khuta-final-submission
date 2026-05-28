@@ -13,8 +13,7 @@ function Login() {
     });
 
     const [loading, setLoading] = useState(false);
-    // تم إضافة هذه الحالة (State) لحفظ وعرض رسائل الخطأ بشكل صحيح
-    const [errorMessage, setErrorMessage] = useState(""); 
+    const [errorMessage, setErrorMessage] = useState("");
 
     const handleChange = (event) => {
         setFormData({
@@ -27,7 +26,7 @@ function Login() {
         event.preventDefault();
 
         setLoading(true);
-        setErrorMessage(""); // تصفير الخطأ مع كل محاولة جديدة
+        setErrorMessage("");
 
         try {
             const response = await API.post(
@@ -41,11 +40,11 @@ function Login() {
             );
 
             window.location.href = "/profile";
-
         } catch (error) {
-            // التقاط الخطأ من الباك اند وتخزينه بشكل صحيح
             setErrorMessage(
-                error.response?.data?.message || "حدث خطأ أثناء تسجيل الدخول، يرجى المحاولة مرة أخرى."
+                error.response?.data?.message ||
+                error.response?.data?.detail ||
+                "حدث خطأ أثناء تسجيل الدخول، يرجى المحاولة مرة أخرى."
             );
         } finally {
             setLoading(false);
@@ -54,35 +53,24 @@ function Login() {
 
     return (
         <main className="auth-page">
-
             <section className="auth-card">
-
                 <div className="auth-icon">
-                    {/* هنا تم إضافة الستايل المباشر لتصغير اللوقو */}
-                    <img 
-                        src="/logo.png" 
-                        alt="Khuta Logo" 
-                        style={{ width: '120px', height: 'auto' }} 
-                    />
+                    <img src="/logo.png" alt="Khuta Logo" />
                 </div>
 
-                <h1>
-                    {t.login}
-                </h1>
+                <h1>{t.login}</h1>
 
                 <p>
                     {t.loginSubtitle || "Welcome back to Khuta Stadium"}
                 </p>
 
-                {/* هنا يتم عرض الخطأ للمستخدم بطريقة برمجية صحيحة */}
                 {errorMessage && (
-                    <p className="field-error" style={{ color: '#ff4d4f', textAlign: 'center', marginBottom: '15px' }}>
+                    <p className="field-error">
                         {errorMessage}
                     </p>
                 )}
 
                 <form onSubmit={handleSubmit}>
-
                     <label className="auth-label">
                         {t.email}
                     </label>
@@ -120,23 +108,17 @@ function Login() {
                     >
                         {loading ? t.loading : `${t.login} →`}
                     </button>
-
                 </form>
 
                 <div className="auth-links">
-
                     <p>
                         {t.noAccount}{" "}
-
                         <Link to="/register">
                             {t.createAccount}
                         </Link>
                     </p>
-
                 </div>
-
             </section>
-
         </main>
     );
 }

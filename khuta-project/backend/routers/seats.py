@@ -26,9 +26,10 @@ def get_seats(match_id: int):
                 status,
                 stand AS category,
                 (status = 'available') AS is_available
-            FROM seats
-            ORDER BY id;
-        """)
+                FROM seats
+                WHERE match_id = %s
+                ORDER BY id;
+                """, (match_id,))
 
         return cursor.fetchall()
 

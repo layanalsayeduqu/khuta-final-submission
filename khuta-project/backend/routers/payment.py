@@ -76,22 +76,17 @@ def purchase_ticket(
 
     try:
         cursor.execute("""
-            SELECT
-                id,
-                seat_id,
-                status,
-                (status = 'available') AS is_available
-            FROM seats
-            WHERE seat_id = %s;
+            UPDATE seats
+            SET status = 'reserved'
+            WHERE seat_id = %s
+            AND status = 'available'
+            RETURNING id, seat_id;
         """, (data.seat_label,))
 
         seat = cursor.fetchone()
 
         if not seat:
-            raise HTTPException(status_code=404, detail=f"Seat not found: {data.seat_label}")
-
-        if not seat["is_available"]:
-            raise HTTPException(status_code=400, detail="Seat not available")
+            raise HTTPException(status_code=400, detail="Seat not available or already reserved")
 
         real_seat_id = seat["id"]
         transaction_code = generate_transaction_code(real_seat_id)

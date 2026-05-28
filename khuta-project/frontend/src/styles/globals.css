@@ -152,7 +152,7 @@ body {
     color: var(--purple);
 }
 
-/* HOME */
+
 .hero,
 .page-shell {
     background: linear-gradient(135deg, rgba(124,58,237,0.13), rgba(255,122,26,0.08));
@@ -184,7 +184,7 @@ body {
     font-size: 18px;
 }
 
-/* Tickets */
+
 .tickets-page-section,
 .bookings-page,
 .pay-page,
@@ -278,7 +278,7 @@ body {
     margin-top: 4px;
 }
 
-/* Seat map */
+
 .sm-layout {
     display: grid;
     grid-template-columns: 1fr 330px;
@@ -399,7 +399,7 @@ body {
     box-shadow: none;
 }
 
-/* Payment */
+
 .pay-page {
     max-width: 1000px;
     margin-inline: auto;
@@ -492,7 +492,7 @@ body {
     text-align: center;
 }
 
-/* Success ticket */
+
 .success-card {
     padding: 34px;
     text-align: center;
@@ -568,7 +568,7 @@ body {
     margin-top: 24px;
 }
 
-/* My Bookings */
+
 .bookings-header {
     margin-bottom: 28px;
 }
@@ -622,7 +622,7 @@ body {
     text-align: center;
 }
 
-/* Favorite */
+
 .favorites-page,
 .favorite-page {
     display: grid;
@@ -667,7 +667,7 @@ body {
     background: linear-gradient(135deg, var(--purple), var(--purple-2));
 }
 
-/* Map */
+
 .map-page .page-shell {
     padding: 34px;
 }
@@ -710,7 +710,7 @@ body {
     padding: 12px;
 }
 
-/* Login/Register common */
+
 .auth-page,
 .login-page,
 .register-page {
@@ -735,16 +735,21 @@ body {
 }
 
 .auth-icon {
-    width: 70px;
-    height: 70px;
-    margin: 0 auto 18px;
-    border-radius: 18px;
-    background: linear-gradient(135deg, var(--purple), var(--orange));
-    color: white;
+    width: 100%;
+    height: auto;
+    margin: 0 auto 14px;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 34px;
+}
+
+.auth-icon img {
+    width: 96px;
+    height: auto;
+    object-fit: contain;
 }
 
 .auth-card h1,
@@ -789,7 +794,7 @@ body {
     background: linear-gradient(135deg, var(--purple), var(--orange));
 }
 
-/* Responsive */
+
 @media (max-width: 1000px) {
     .tickets-grid,
     .sm-layout,
@@ -843,6 +848,7 @@ body {
         grid-template-columns: 1fr;
     }
 }
+
 .auth-card-large {
     max-width: 520px;
 }
@@ -891,6 +897,7 @@ body {
         grid-template-columns: 1fr;
     }
 }
+
 .danger-action,
 .back-btn,
 .secondary-btn {
@@ -921,6 +928,7 @@ body {
 .route-panel {
     overflow: hidden;
 }
+
 .route-actions {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -1002,6 +1010,7 @@ body.dark .secondary-btn {
     background: var(--card-2);
     color: var(--text);
 }
+
 .input-group {
     display: flex;
     flex-direction: column;
@@ -1015,6 +1024,7 @@ body.dark .secondary-btn {
     margin: 0;
     text-align: right;
 }
+
 .field-error {
     color: #ff4d4f;
     font-size: 13px;
@@ -1023,6 +1033,7 @@ body.dark .secondary-btn {
     text-align: right;
     min-height: 18px;
 }
+
 .success-text {
     color: #16a34a;
     background: #dcfce7;
@@ -1032,6 +1043,7 @@ body.dark .secondary-btn {
     font-size: 14px;
     margin: 8px 0 14px;
 }
+
 .favorite-page-pro {
     max-width: 1250px;
     margin: 0 auto;
@@ -1290,10 +1302,10 @@ body.dark .secondary-btn {
     .fav-actions {
         justify-content: space-between;
     }
-    
+
 }
 
-/* Old stadium map markers: Gate and Emergency Exit */
+
 .old-map-marker {
     width: 27px;
     height: 27px;
@@ -1342,6 +1354,7 @@ body.dark .secondary-btn {
 .old-map-marker:hover {
     transform: none;
 }
+
 .facility-marker {
     background: transparent !important;
     border: none !important;
@@ -1447,21 +1460,22 @@ body.dark .secondary-btn {
 .home-section-title {
     font-size: 36px;
     font-weight: 900;
-    color: #1f2540;
+    color: var(--text);
     margin: 0 0 26px;
     text-align: start;
 }
 
 .live-match-card,
 .upcoming-card {
-    background: #fffaf4;
-    border: 1px solid rgba(124, 58, 237, 0.15);
+    background: var(--card);
+    border: 1px solid var(--border);
     border-radius: 22px;
     padding: 28px;
-    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.06);
+    box-shadow: var(--shadow);
 }
 
 .live-match-card {
+    color: var(--text);
     max-width: 620px;
 }
 
@@ -1487,13 +1501,13 @@ body.dark .secondary-btn {
 
 .live-team h3,
 .upcoming-team h3 {
-    color: #1f2540;
+    color: var(--text);
     margin: 6px 0;
 }
 
 .live-team strong {
     font-size: 38px;
-    color: #1f2540;
+    color: var(--text);
 }
 
 .live-score-divider,
@@ -1501,19 +1515,19 @@ body.dark .secondary-btn {
     width: 54px;
     height: 54px;
     border-radius: 50%;
-    background: #eee8dc;
+    background: var(--card-2);
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 900;
-    color: #7b8195;
+    color: var(--text);
 }
 
 .match-info-row {
     display: flex;
     gap: 18px;
     flex-wrap: wrap;
-    color: #7b8195;
+    color: var(--muted);
     margin-top: 22px;
 }
 
@@ -1570,6 +1584,98 @@ body.dark .secondary-btn {
         grid-template-columns: 1fr;
     }
 }
+
+
+.hero-welcome-banner {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    min-height: 360px;
+    padding: 48px 6%;
+    border-radius: 28px;
+    margin-bottom: 40px;
+    overflow: hidden;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+}
+
+
+.hero-welcome-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(16, 28, 43, 0.85), rgba(16, 28, 43, 0.4));
+    z-index: 1;
+}
+
+
+.hero-welcome-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    text-align: start;
+    width: 100%;
+}
+
+
+.hero-welcome-content h1 {
+    font-size: 48px;
+    font-weight: 800;
+    color: #ffffff;
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 16px;
+}
+
+
+.hero-welcome-logo {
+    height: 58px;
+    width: auto;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.2));
+}
+
+
+.hero-welcome-content p {
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 17px;
+    line-height: 1.7;
+    margin: 0;
+    max-width: 600px;
+    font-weight: 500;
+}
+
+
+@media (max-width: 768px) {
+    .hero-welcome-banner {
+        min-height: 280px;
+        padding: 32px 20px;
+    }
+    .hero-welcome-content {
+        text-align: center;
+        align-items: center;
+    }
+    .hero-welcome-content h1 {
+        font-size: 32px;
+        justify-content: center;
+        gap: 10px;
+    }
+    .hero-welcome-logo {
+        height: 42px;
+    }
+    .hero-welcome-content p {
+        font-size: 14px;
+    }
+}
+
+
 .navigation-grid {
   display: grid;
   grid-template-columns: minmax(260px, 300px) minmax(520px, 1fr) minmax(280px, 320px);
@@ -1949,4 +2055,42 @@ body.dark .map-page .seat-guidance-grid strong,
 [data-theme="dark"] .map-page .seat-guidance-main,
 [data-theme="dark"] .map-page .seat-guidance-grid strong {
     color: var(--text);
+}
+
+body.dark .auth-page,
+body.dark .login-page,
+body.dark .register-page,
+.dark .auth-page,
+.dark .login-page,
+.dark .register-page,
+[data-theme="dark"] .auth-page,
+[data-theme="dark"] .login-page,
+[data-theme="dark"] .register-page {
+    background: var(--bg);
+}
+
+body.dark .auth-card,
+body.dark .login-card,
+body.dark .register-card,
+.dark .auth-card,
+.dark .login-card,
+.dark .register-card,
+[data-theme="dark"] .auth-card,
+[data-theme="dark"] .login-card,
+[data-theme="dark"] .register-card {
+    background: var(--card);
+    border-color: var(--border);
+    box-shadow: var(--shadow);
+}
+
+body.dark .auth-card p,
+body.dark .login-card p,
+body.dark .register-card p,
+.dark .auth-card p,
+.dark .login-card p,
+.dark .register-card p,
+[data-theme="dark"] .auth-card p,
+[data-theme="dark"] .login-card p,
+[data-theme="dark"] .register-card p {
+    color: var(--muted);
 }

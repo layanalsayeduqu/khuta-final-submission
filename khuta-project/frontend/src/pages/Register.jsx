@@ -58,7 +58,7 @@ function Register() {
 
             newErrors.age = "العمر مطلوب";
 
-        } else if (ageNumber <= 18 || ageNumber > 120) {
+        } else if (ageNumber < 13 || ageNumber > 100) {
 
             newErrors.age = "العمر غير صحيح";
         }
@@ -160,9 +160,9 @@ function Register() {
 
             <section className="auth-card auth-card-large">
 
-                <div className="auth-icon">
-                   <img src="/logo.png" alt="Khuta Logo" />
-                </div>
+             <div className="auth-icon">
+                <img src="/logo.png" alt="Khuta Logo" />
+               </div>
 
                 <h1>
                     {t.createAccount}
