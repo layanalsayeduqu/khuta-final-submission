@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useLanguage } from "../context/LanguageContext";
+import API from "../api/api";
 
 const DATA = {
   field: "/data/field.geojson",
@@ -39,6 +40,8 @@ function App() {
   const routeAnimationRef = useRef(null);
   const [selectedSeat,   setSelectedSeat]   = useState(null);
   const [selectedGate,   setSelectedGate]   = useState(null);
+  const [startPoint, setStartPoint] = useState(null);
+  const [endPoint, setEndPoint] = useState(null);
   const selectedRouteRef = useRef({ start: null, end: null });
   const seats3dRef = useRef(null);
 const [msg, setMsg] = useState("");
@@ -47,6 +50,7 @@ const [msg, setMsg] = useState("");
   const [nearbyType, setNearbyType] = useState(null);
   const [nearbyLoading, setNearbyLoading] = useState(false);
   const [nearbyError, setNearbyError] = useState("");
+  const [, setMyTicketSeat] = useState(null);
 
 const { lang, t } = useLanguage();
   useEffect(() => {
@@ -403,6 +407,31 @@ map.addLayer({
     "text-halo-width": 2,
   },
 });
+
+const token = localStorage.getItem("token");
+
+if (!token) {
+  console.log("No token found. User is not logged in.");
+} else {
+  try {
+    const response = await API.get("/api/tickets/my-seat", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const mySeat = response.data;
+    setMyTicketSeat(mySeat);
+
+    highlightMyTicketSeat(map, seatPoints, mySeat);
+  } catch (error) {
+    console.log(
+      "No active ticket found:",
+      error.response?.data || error.message
+    );
+  }
+}
+
         map.addLayer({
           id: "seat-labels",
           type: "symbol",
@@ -541,17 +570,22 @@ addFacilityMarkers(map, facilities);
              <div class="pop-row"><span>${t.status}</span><b class="status-${p.status || "available"}">${p.status === "sold" ? labels.statusSold : p.status === "reserved" ? labels.statusReserved : labels.statusAvailable}</b></div>`
           );
         });
-        map.on("click", "gates-click-area", (e) => {
-          const f = e.features?.[0];
-          if (!f) return;
-          const currentLang = mapRef.current?.customLang || "en";
-          selectRoutePoint(
-            { ...f.properties, type: "gate", label: f.properties?.name || "Gate", coordinates: f.geometry.coordinates },
-            e.lngLat,
-            `<div class="pop-title">${f.properties?.name || "Gate"}</div>
-             <div class="pop-row"><span>✅ ${t.gateClickArea}</span></div>`
-          );
-        });
+      map.on("click", "gates-click-area", (e) => {
+  const f = e.features?.[0];
+  if (!f) return;
+
+  selectRoutePoint(
+    {
+      ...f.properties,
+      type: "gate",
+      label: f.properties?.name || f.properties?.id || "Gate",
+      coordinates: f.geometry.coordinates,
+    },
+    e.lngLat,
+    `<div class="pop-title">${f.properties?.name || f.properties?.id || "Gate"}</div>
+     <div class="pop-row"><span>✅ ${t.gateClickArea}</span></div>`
+  );
+});
         map.on("click", "gates-3d", (e) => {
           const f = e.features?.[0];
           if (!f) return;
@@ -633,32 +667,82 @@ addFacilityMarkers(map, facilities);
     });
   }
 
+
+  function highlightMyTicketSeat(map, seatPoints, mySeat) {
+    if (!map || !mySeat || !seatPoints?.features) return;
+
+    const seatFeature = seatPoints.features.find((feature) => {
+      const p = feature.properties || {};
+
+      return (
+        String(p.seat_id) === String(mySeat.seat_code) ||
+        String(p.seat_id) === String(mySeat.seat_id) ||
+        String(p.id) === String(mySeat.seat_id) ||
+        String(feature.id) === String(mySeat.seat_id)
+      );
+    });
+
+    if (!seatFeature) {
+      console.warn("Seat not found on map:", mySeat);
+      return;
+    }
+
+    const coords = seatFeature.geometry.coordinates;
+    const props = {
+      ...(seatFeature.properties || {}),
+      seat_id: mySeat.seat_code || mySeat.seat_id,
+      section: mySeat.section,
+      row: mySeat.row,
+      seat: mySeat.seat,
+    };
+
+    highlightSelectedSeat(props, coords);
+
+    map.flyTo({
+      center: coords,
+      zoom: 20.5,
+      pitch: 45,
+      bearing: 0,
+      duration: 1200,
+    });
+
+    popupRefGlobal?.remove?.();
+    popupRefGlobal = new maplibregl.Popup({ closeButton: true, closeOnClick: false })
+      .setLngLat(coords)
+      .setHTML(`
+        <div class="pop-title">🎟️ Your Seat</div>
+        <div class="pop-row"><span>Seat</span><b>${mySeat.seat_code || mySeat.seat_id || "-"}</b></div>
+        <div class="pop-row"><span>Section</span><b>${mySeat.section || "-"}</b></div>
+        <div class="pop-row"><span>Row</span><b>${mySeat.row || "-"}</b></div>
+        <div class="pop-row"><span>Seat No.</span><b>${mySeat.seat || "-"}</b></div>
+      `)
+      .addTo(map);
+  }
+
   function clearSeatHighlight() {
     mapRef.current?.getSource("selected-row-3d")?.setData(emptyRoute());
     mapRef.current?.getSource("selected-seat-3d")?.setData(emptyRoute());
     mapRef.current?.getSource("selected-seat-point")?.setData(emptyRoute());
   }
 
-  function getPointLabel(point) {
-    if (!point) return t.notSelected;
+ function getPointLabel(point) {
+  if (!point) return t.notSelected;
 
-    if (point.type && t.facilityLabels?.[point.type]) {
-      return t.facilityLabels[point.type];
-    }
-
-    return (
-      point?.label ||
-      point?.name_en ||
-      point?.nameEn ||
-      point?.english_name ||
-      point?.name_ar ||
-      point?.name ||
-      point?.seat_id ||
-      point?.id ||
-      point?.seat ||
-      t.notSelected
-    );
-  }
+  return (
+    point?.label ||
+    point?.name_en ||
+    point?.nameEn ||
+    point?.english_name ||
+    point?.name_ar ||
+    point?.name ||
+    point?.gate_name ||
+    point?.seat_id ||
+    point?.id ||
+    point?.seat ||
+    (point.type && t.facilityLabels?.[point.type]) ||
+    t.notSelected
+  );
+}
 
   function getFacilityLabel(type) {
     const key = String(type || "facility").toLowerCase();
@@ -681,8 +765,7 @@ addFacilityMarkers(map, facilities);
   }
 
   function getOriginForNearby() {
-
-    return selectedRouteRef.current?.start?.coordinates || selectedGate?.coordinates || null;
+    return selectedRouteRef.current?.start?.coordinates || startPoint?.coordinates || null;
   }
 
   async function fetchNearbyFacilities(type) {
@@ -730,8 +813,12 @@ addFacilityMarkers(map, facilities);
   }
 
   function selectRoutePoint(point, lngLat, popupHtml) {
-    const currentLang = mapRef.current?.customLang || "en";
     const displayCoords = point.coordinates;
+
+    if (!Array.isArray(displayCoords) || displayCoords.length < 2) {
+      setMsg(lang === "ar" ? "لا يمكن تحديد هذه النقطة للمسار" : "This point cannot be used for routing");
+      return;
+    }
 
     const routePoint = {
       ...point,
@@ -743,15 +830,35 @@ addFacilityMarkers(map, facilities);
 
     if (!current.start || (current.start && current.end)) {
       selectedRouteRef.current = { start: routePoint, end: null };
+
+      setStartPoint(routePoint);
+      setEndPoint(null);
+
+      // نتركها للتوافق مع أي جزء قديم في الكود، لكنها لم تعد تعني Gate/Seat حرفيًا
       setSelectedGate(routePoint);
       setSelectedSeat(null);
+
       setRouteDrawn(false);
       stopRouteAnimation();
       mapRef.current?.getSource("route")?.setData(emptyRoute());
       setMsg(t.startSelected);
     } else {
+      const sameCoordinates =
+        Number(current.start.coordinates?.[0]) === Number(routePoint.coordinates?.[0]) &&
+        Number(current.start.coordinates?.[1]) === Number(routePoint.coordinates?.[1]);
+
+      if (sameCoordinates) {
+        setMsg(lang === "ar" ? "اختاري نقطة مختلفة عن نقطة البداية" : "Choose a different destination point");
+        return;
+      }
+
       selectedRouteRef.current = { ...current, end: routePoint };
+
+      setEndPoint(routePoint);
+
+      // نتركها للتوافق مع أي جزء قديم في الكود، لكنها لم تعد تعني Gate/Seat حرفيًا
       setSelectedSeat(routePoint);
+
       setMsg(t.twoPointsSelected);
     }
 
@@ -804,23 +911,26 @@ addFacilityMarkers(map, facilities);
   }
 
   async function fetchRoute() {
-    if (!selectedGate || !selectedSeat) {
+    const start = selectedRouteRef.current.start;
+    const end = selectedRouteRef.current.end;
+
+    if (!start || !end) {
       setMsg(t.selectTwoPointsFirst);
       return;
     }
 
-    const startCoords = selectedGate.coordinates;
-    const endCoords = selectedSeat.coordinates;
+    const startCoords = start.coordinates;
+    const endCoords = end.coordinates;
 
-    const [gateLon, gateLat] = startCoords;
-    const [seatLon, seatLat] = endCoords;
+    const [startLon, startLat] = startCoords;
+    const [endLon, endLat] = endCoords;
     const floor = 1;
 
     const params = new URLSearchParams({
-      start_lon: gateLon,
-      start_lat: gateLat,
-      end_lon: seatLon,
-      end_lat: seatLat,
+      start_lon: startLon,
+      start_lat: startLat,
+      end_lon: endLon,
+      end_lat: endLat,
       floor: floor,
     });
 
@@ -876,6 +986,8 @@ addFacilityMarkers(map, facilities);
 
   function resetSelection() {
     selectedRouteRef.current = { start: null, end: null };
+    setStartPoint(null);
+    setEndPoint(null);
     setSelectedGate(null);
     setSelectedSeat(null);
     setRouteDrawn(false);
@@ -894,41 +1006,51 @@ addFacilityMarkers(map, facilities);
     const num = String(p.name || p.id || "").replace(/\D/g, "");
 
     const el = document.createElement("button");
-if (type === "exit") {
-  el.className = "exit-marker old-map-marker";
-  el.innerHTML = `
-    <span class="old-exit-symbol">↪</span>
-  `;
-  el.title = getFacilityLabel("exit");
-} else {
-  el.className = "gate-marker old-map-marker";
-  el.innerHTML = `
-    <span class="old-gate-text">GATE</span>
-    <span class="old-gate-num">${num}</span>
-  `;
-  el.title = getFacilityLabel("gate");
-}
-    el.onclick = () => {
-      const currentLang = mapRef.current?.customLang || "en";
+
+    if (type === "exit") {
+      el.className = "exit-marker old-map-marker";
+      el.innerHTML = `
+        <span class="old-exit-symbol">↪</span>
+      `;
+      el.title = getFacilityLabel("exit");
+    } else {
+      el.className = "gate-marker old-map-marker";
+      el.innerHTML = `
+        <span class="old-gate-text">GATE</span>
+        <span class="old-gate-num">${num}</span>
+      `;
+      el.title = getFacilityLabel("gate");
+    }
+
+    el.onclick = (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+
       const routeType = type === "exit" ? "exit" : "gate";
-      const routePoint = { ...p, type: routeType, label: getFacilityLabel(routeType), coordinates: feature.geometry.coordinates };
+
+      const routePoint = {
+        ...p,
+        type: routeType,
+        label: p.name || p.id || getFacilityLabel(routeType),
+        coordinates: feature.geometry.coordinates,
+      };
 
       if (type === "exit") {
-        fetchNearbyFacilities("exit", routePoint);
+        fetchNearbyFacilities("exit");
       }
 
       selectRoutePoint(
         routePoint,
         feature.geometry.coordinates,
-        `<div class="pop-title">${p.name || "Gate"}</div>
+        `<div class="pop-title">${p.name || p.id || "Gate"}</div>
          <div class="pop-row"><span>${t.locationSelected}</span></div>`
       );
     };
 
-   const marker = new maplibregl.Marker({
-  element: el,
-  anchor: "center"
-})
+    const marker = new maplibregl.Marker({
+      element: el,
+      anchor: "center",
+    })
       .setLngLat(feature.geometry.coordinates)
       .addTo(map);
 
@@ -1004,11 +1126,11 @@ function addFacilityMarkers(map, data) {
             <div className="selection-summary">
               <div className="selection-row">
                 <span>{t.startPoint}</span>
-                <strong>{selectedGate ? getPointLabel(selectedGate) : t.notSelected}</strong>
+                <strong>{startPoint ? getPointLabel(startPoint) : t.notSelected}</strong>
               </div>
               <div className="selection-row">
                 <span>{t.destination}</span>
-                <strong>{selectedSeat ? getPointLabel(selectedSeat) : t.notSelected}</strong>
+                <strong>{endPoint ? getPointLabel(endPoint) : t.notSelected}</strong>
               </div>
             </div>
             <div className="route-placeholder">
@@ -1016,8 +1138,8 @@ function addFacilityMarkers(map, data) {
               <strong>{msg}</strong>
             </div>
 
-            {selectedSeat?.type === "seat" && (() => {
-              const seat = getSeatDetails(selectedSeat);
+            {endPoint?.type === "seat" && (() => {
+              const seat = getSeatDetails(endPoint);
               return (
                 <div className="seat-guidance-card">
                   <div className="seat-guidance-success">

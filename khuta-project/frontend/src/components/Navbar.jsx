@@ -17,9 +17,18 @@ function Navbar() {
     const isLoggedIn =
         !!localStorage.getItem("token");
 
+    const role = localStorage.getItem("role");
+
+    const isOrganizer =
+        role?.toLowerCase() === "organizer";
+
     const logout = () => {
 
         localStorage.removeItem("token");
+        localStorage.removeItem("user_id");
+        localStorage.removeItem("user_name");
+        localStorage.removeItem("user_email");
+        localStorage.removeItem("role");
 
         window.location.href = "/login";
     };
@@ -76,16 +85,30 @@ function Navbar() {
                     {t.myBookings}
                 </Link>
 
+                {isOrganizer && (
+                    <Link to="/organizer">
+                        {t.organizerDashboard}
+                    </Link>
+                )}
+
             </div>
 
             <div className="nav-actions">
 
-                <button onClick={toggleTheme}>
+                <button
+                    type="button"
+                    className={`theme-switch ${theme === "dark" ? "dark" : ""}`}
+                    onClick={toggleTheme}
+                >
+                    <span className="theme-thumb"></span>
 
-                    {theme === "light"
-                        ? "🌙"
-                        : "☀️"}
+                    <span className="theme-moon">🌙</span>
 
+                    <span className="theme-star star-1">✦</span>
+                    <span className="theme-star star-2">✦</span>
+                    <span className="theme-star star-3">✦</span>
+
+                    <span className="theme-sun">☀️</span>
                 </button>
 
                 <button onClick={toggleLanguage}>
@@ -132,6 +155,12 @@ function Navbar() {
                                 <Link to="/bookings">
                                     {t.myBookings}
                                 </Link>
+
+                                {isOrganizer && (
+                                    <Link to="/organizer">
+                                        {t.organizerDashboard}
+                                    </Link>
+                                )}
 
                                 <button onClick={logout}>
                                     {t.logout}

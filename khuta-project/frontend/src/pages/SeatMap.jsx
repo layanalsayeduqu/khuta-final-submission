@@ -1,266 +1,273 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-
 import { useLanguage } from "../context/LanguageContext";
+import API from "../api/api";
 
-const BOUNDS = {
-    minLon: 39.12215,
-    maxLon: 39.12335,
-    minLat: 22.08925,
-    maxLat: 22.0904
+const SVG_W = 1000;
+const SVG_H = 760;
+
+const MAP_SEATS_URL = "/data/seats.geojson";
+const STADIUM_BOX = { x: 90, y: 70, w: 820, h: 630 };
+const FIELD = { x: 320, y: 250, w: 360, h: 260 };
+
+const STAND_CATS = {
+    North: { label: "Gold", multiplier: 1.5, color: "#f59e0b", soft: "#fff7ed" },
+    South: { label: "Silver", multiplier: 1.0, color: "#6b7280", soft: "#f3f4f6" },
+    West:  { label: "VIP", multiplier: 2.0, color: "#9b59b6", soft: "#f7f0ff" },
+    East:  { label: "Premium", multiplier: 1.3, color: "#2ecc71", soft: "#ecfdf5" },
 };
 
-const SVG_W = 820;
-const SVG_H = 720;
-const PAD = 45;
+const STAND_ORDER = { North: 1, East: 2, South: 3, West: 4 };
 
-function toSVG(lon, lat) {
-    const x =
-        PAD +
-        ((lon - BOUNDS.minLon) / (BOUNDS.maxLon - BOUNDS.minLon)) *
-            (SVG_W - PAD * 2);
-
-    const y =
-        PAD +
-        ((BOUNDS.maxLat - lat) / (BOUNDS.maxLat - BOUNDS.minLat)) *
-            (SVG_H - PAD * 2);
-
-    return [x, y];
+function normalizeText(value) {
+    return String(value ?? "").trim().toUpperCase();
 }
 
-const SECTIONS_DATA = [
-    { section: "N1", stand: "North", color: "#f59e0b", lonMin: 39.12235, lonMax: 39.122535, latMin: 22.0902, latMax: 22.0904 },
-    { section: "N2", stand: "North", color: "#f59e0b", lonMin: 39.122555, lonMax: 39.12274, latMin: 22.0902, latMax: 22.0904 },
-    { section: "N3", stand: "North", color: "#f59e0b", lonMin: 39.12276, lonMax: 39.122945, latMin: 22.0902, latMax: 22.0904 },
-    { section: "N4", stand: "North", color: "#f59e0b", lonMin: 39.122965, lonMax: 39.12315, latMin: 22.0902, latMax: 22.0904 },
-
-    { section: "S1", stand: "South", color: "#6b7280", lonMin: 39.12235, lonMax: 39.122535, latMin: 22.08925, latMax: 22.08945 },
-    { section: "S2", stand: "South", color: "#6b7280", lonMin: 39.122555, lonMax: 39.12274, latMin: 22.08925, latMax: 22.08945 },
-    { section: "S3", stand: "South", color: "#6b7280", lonMin: 39.12276, lonMax: 39.122945, latMin: 22.08925, latMax: 22.08945 },
-    { section: "S4", stand: "South", color: "#6b7280", lonMin: 39.122965, lonMax: 39.12315, latMin: 22.08925, latMax: 22.08945 },
-
-    { section: "W1", stand: "West", color: "#9b59b6", lonMin: 39.12215, lonMax: 39.12235, latMin: 22.0895, latMax: 22.089647 },
-    { section: "W2", stand: "West", color: "#9b59b6", lonMin: 39.12215, lonMax: 39.12235, latMin: 22.089677, latMax: 22.089823 },
-    { section: "W3", stand: "West", color: "#9b59b6", lonMin: 39.12215, lonMax: 39.12235, latMin: 22.089853, latMax: 22.09 },
-
-    { section: "E1", stand: "East", color: "#2ecc71", lonMin: 39.12315, lonMax: 39.12335, latMin: 22.0895, latMax: 22.089647 },
-    { section: "E2", stand: "East", color: "#2ecc71", lonMin: 39.12315, lonMax: 39.12335, latMin: 22.089677, latMax: 22.089823 },
-    { section: "E3", stand: "East", color: "#2ecc71", lonMin: 39.12315, lonMax: 39.12335, latMin: 22.089853, latMax: 22.09 }
-];
-
-const NS_LONS = {
-    N1: [39.1223833, 39.1224018, 39.1224203, 39.1224647, 39.1224832, 39.1225017],
-    N2: [39.1225883, 39.1226068, 39.1226253, 39.1226697, 39.1226882, 39.1227067],
-    N3: [39.1227933, 39.1228118, 39.1228303, 39.1228747, 39.1228932, 39.1229117],
-    N4: [39.1229983, 39.1230168, 39.1230353, 39.1230797, 39.1230982, 39.1231167],
-    S1: [39.1223833, 39.1224018, 39.1224203, 39.1224647, 39.1224832, 39.1225017],
-    S2: [39.1225883, 39.1226068, 39.1226253, 39.1226697, 39.1226882, 39.1227067],
-    S3: [39.1227933, 39.1228118, 39.1228303, 39.1228747, 39.1228932, 39.1229117],
-    S4: [39.1229983, 39.1230168, 39.1230353, 39.1230797, 39.1230982, 39.1231167]
-};
-
-const N_LATS = [22.090225, 22.090275, 22.090325, 22.090375];
-const S_LATS = [22.089425, 22.089375, 22.089325, 22.089275];
-const W_LONS = [39.122325, 39.122275, 39.122225, 39.122175];
-const E_LONS = [39.123175, 39.123225, 39.123275, 39.123325];
-
-const WE_LATS = {
-    W1: [22.0895264, 22.08954107, 22.08955573, 22.08959093, 22.0896056, 22.08962027],
-    W2: [22.08970307, 22.08971773, 22.0897324, 22.0897676, 22.08978227, 22.08979693],
-    W3: [22.08987973, 22.0898944, 22.08990907, 22.08994427, 22.08995893, 22.0899736],
-    E1: [22.0895264, 22.08954107, 22.08955573, 22.08959093, 22.0896056, 22.08962027],
-    E2: [22.08970307, 22.08971773, 22.0897324, 22.0897676, 22.08978227, 22.08979693],
-    E3: [22.08987973, 22.0898944, 22.08990907, 22.08994427, 22.08995893, 22.0899736]
-};
-
-function buildSeats() {
-    const seats = [];
-
-    ["N1", "N2", "N3", "N4"].forEach((section) => {
-        N_LATS.forEach((lat, rowIndex) => {
-            NS_LONS[section].forEach((lon, seatIndex) => {
-                seats.push({
-                    seat_id: `${section}-R${rowIndex + 1}-S${seatIndex + 1}`,
-                    stand: "North",
-                    section,
-                    row: rowIndex + 1,
-                    seat: seatIndex + 1,
-                    status: "available",
-                    lon,
-                    lat
-                });
-            });
-        });
-    });
-
-    ["S1", "S2", "S3", "S4"].forEach((section) => {
-        S_LATS.forEach((lat, rowIndex) => {
-            NS_LONS[section].forEach((lon, seatIndex) => {
-                seats.push({
-                    seat_id: `${section}-R${rowIndex + 1}-S${seatIndex + 1}`,
-                    stand: "South",
-                    section,
-                    row: rowIndex + 1,
-                    seat: seatIndex + 1,
-                    status: "available",
-                    lon,
-                    lat
-                });
-            });
-        });
-    });
-
-    ["W1", "W2", "W3"].forEach((section) => {
-        W_LONS.forEach((lon, rowIndex) => {
-            WE_LATS[section].forEach((lat, seatIndex) => {
-                seats.push({
-                    seat_id: `${section}-R${rowIndex + 1}-S${seatIndex + 1}`,
-                    stand: "West",
-                    section,
-                    row: rowIndex + 1,
-                    seat: seatIndex + 1,
-                    status: "available",
-                    lon,
-                    lat
-                });
-            });
-        });
-    });
-
-    ["E1", "E2", "E3"].forEach((section) => {
-        E_LONS.forEach((lon, rowIndex) => {
-            WE_LATS[section].forEach((lat, seatIndex) => {
-                seats.push({
-                    seat_id: `${section}-R${rowIndex + 1}-S${seatIndex + 1}`,
-                    stand: "East",
-                    section,
-                    row: rowIndex + 1,
-                    seat: seatIndex + 1,
-                    status: "available",
-                    lon,
-                    lat
-                });
-            });
-        });
-    });
-
-    return seats;
+function seatKey(section, row, seat) {
+    return `${normalizeText(section)}|${normalizeText(row)}|${normalizeText(seat)}`;
 }
 
-const ALL_SEATS = buildSeats();
+function getSeatId(section, row, seat) {
+    return `${String(section).trim()}-R${row}-S${seat}`;
+}
 
-const STAND_CATEGORIES = {
-    North: { label: "Gold", multiplier: 1.5 },
-    South: { label: "Silver", multiplier: 1.0 },
-    West: { label: "VIP", multiplier: 2.0 },
-    East: { label: "Premium", multiplier: 1.3 }
-};
+function guessStand(section = "") {
+    const first = String(section).trim().charAt(0).toUpperCase();
+    if (first === "N") return "North";
+    if (first === "S") return "South";
+    if (first === "E") return "East";
+    if (first === "W") return "West";
+    return "South";
+}
 
-const [FIELD_X1] = toSVG(39.12235, 22.09);
-const [FIELD_X2] = toSVG(39.12315, 22.09);
-const [, FIELD_Y1] = toSVG(39.12275, 22.0902);
-const [, FIELD_Y2] = toSVG(39.12275, 22.08945);
+function getBounds(features) {
+    const coords = features
+        .map((f) => f.geometry?.coordinates)
+        .filter((c) => Array.isArray(c) && Number.isFinite(Number(c[0])) && Number.isFinite(Number(c[1])));
 
-function seatColor(seat, isSelected) {
+    if (coords.length === 0) {
+        return { minX: 0, maxX: 1, minY: 0, maxY: 1 };
+    }
+
+    return coords.reduce((acc, [x, y]) => ({
+        minX: Math.min(acc.minX, Number(x)),
+        maxX: Math.max(acc.maxX, Number(x)),
+        minY: Math.min(acc.minY, Number(y)),
+        maxY: Math.max(acc.maxY, Number(y)),
+    }), {
+        minX: Number(coords[0][0]),
+        maxX: Number(coords[0][0]),
+        minY: Number(coords[0][1]),
+        maxY: Number(coords[0][1]),
+    });
+}
+
+function projectPoint([lng, lat], bounds) {
+    const rangeX = bounds.maxX - bounds.minX || 1;
+    const rangeY = bounds.maxY - bounds.minY || 1;
+
+    return {
+        x: STADIUM_BOX.x + ((Number(lng) - bounds.minX) / rangeX) * STADIUM_BOX.w,
+        y: STADIUM_BOX.y + ((bounds.maxY - Number(lat)) / rangeY) * STADIUM_BOX.h,
+    };
+}
+
+function sectionNumber(section = "") {
+    const n = String(section).match(/\d+/)?.[0];
+    return Number(n || 1);
+}
+
+function sortSections(a, b) {
+    const standDiff = (STAND_ORDER[a.stand] || 99) - (STAND_ORDER[b.stand] || 99);
+    if (standDiff !== 0) return standDiff;
+    return sectionNumber(a.section) - sectionNumber(b.section);
+}
+
+function buildSectionPanels(seats) {
+    const groups = {};
+
+    seats.forEach((seat) => {
+        if (!groups[seat.section]) {
+            groups[seat.section] = {
+                section: seat.section,
+                stand: seat.stand || guessStand(seat.section),
+                minX: seat.x,
+                maxX: seat.x,
+                minY: seat.y,
+                maxY: seat.y,
+                count: 0,
+            };
+        }
+
+        const g = groups[seat.section];
+        g.minX = Math.min(g.minX, seat.x);
+        g.maxX = Math.max(g.maxX, seat.x);
+        g.minY = Math.min(g.minY, seat.y);
+        g.maxY = Math.max(g.maxY, seat.y);
+        g.count += 1;
+    });
+
+    return Object.values(groups).sort(sortSections).map((g) => {
+        const cat = STAND_CATS[g.stand] || STAND_CATS.South;
+        const cx = (g.minX + g.maxX) / 2;
+        const cy = (g.minY + g.maxY) / 2;
+        let points = "";
+
+        if (g.stand === "North") {
+            const top = g.minY - 18;
+            const bottom = g.maxY + 18;
+            const left = g.minX - 38 - sectionNumber(g.section) * 3;
+            const right = g.maxX + 38 + sectionNumber(g.section) * 3;
+            points = `${left + 22},${top} ${right - 22},${top} ${right},${bottom} ${left},${bottom}`;
+        } else if (g.stand === "South") {
+            const top = g.minY - 18;
+            const bottom = g.maxY + 18;
+            const left = g.minX - 38 - sectionNumber(g.section) * 3;
+            const right = g.maxX + 38 + sectionNumber(g.section) * 3;
+            points = `${left},${top} ${right},${top} ${right - 22},${bottom} ${left + 22},${bottom}`;
+        } else if (g.stand === "West") {
+            const left = g.minX - 22;
+            const right = g.maxX + 22;
+            const top = g.minY - 26;
+            const bottom = g.maxY + 26;
+            points = `${left},${top + 22} ${right},${top} ${right},${bottom} ${left},${bottom - 22}`;
+        } else {
+            const left = g.minX - 22;
+            const right = g.maxX + 22;
+            const top = g.minY - 26;
+            const bottom = g.maxY + 26;
+            points = `${left},${top} ${right},${top + 22} ${right},${bottom - 22} ${left},${bottom}`;
+        }
+
+        return { ...g, cx, cy, points, color: cat.color, soft: cat.soft, label: cat.label };
+    });
+}
+
+function seatFill(seat, isSelected) {
     if (isSelected) return "#7c3aed";
     if (seat.status === "sold") return "#374151";
-    if (seat.status === "reserved") return "#f59e0b";
-
-    const colors = {
-        North: "#f59e0b",
-        South: "#6b7280",
-        West: "#9b59b6",
-        East: "#2ecc71"
-    };
-
-    return colors[seat.stand] || "#6b7280";
+    if (seat.status === "reserved") return "#9ca3af";
+    return STAND_CATS[seat.stand]?.color || "#6b7280";
 }
 
 export default function SeatMap() {
     const { t } = useLanguage();
     const location = useLocation();
     const navigate = useNavigate();
-
     const selectedMatch = location.state?.match;
 
-    const [seats, setSeats] = useState(ALL_SEATS);
+    const [seats, setSeats] = useState([]);
     const [selected, setSelected] = useState({});
+    const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         if (!selectedMatch?.id) return;
 
-        fetch(`http://127.0.0.1:8000/api/seats/matches/${selectedMatch.id}`)
-            .then((response) => response.ok ? response.json() : null)
-            .then((dbSeats) => {
-                if (!dbSeats || dbSeats.length === 0) return;
+        setLoading(true);
+        setSeats([]);
+        setSelected({});
+        setError("");
 
-                const lookup = {};
+        Promise.all([
+            API.get(`/api/seats/matches/${selectedMatch.id}`),
+            fetch(MAP_SEATS_URL).then((res) => {
+                if (!res.ok) throw new Error(`Could not load ${MAP_SEATS_URL}`);
+                return res.json();
+            }),
+        ])
+            .then(([dbRes, seatsGeojson]) => {
+                const dbSeats = Array.isArray(dbRes.data) ? dbRes.data : [];
+                const mapFeatures = Array.isArray(seatsGeojson.features) ? seatsGeojson.features : [];
+                const bounds = getBounds(mapFeatures);
+
+                const dbById = {};
+                const dbByKey = {};
 
                 dbSeats.forEach((db) => {
-                    const seatLabel =
-                        db.seat_number ||
-                        db.seat_label ||
-                        db.seat_id ||
-                        `${db.section}-R${db.row}-S${db.seat}`;
+                    const section = db.section;
+                    const row = db.row;
+                    const seat = db.seat;
+                    const id = db.seat_id || getSeatId(section, row, seat);
 
-                    lookup[seatLabel] = db;
+                    if (id) dbById[normalizeText(id)] = db;
+                    dbByKey[seatKey(section, row, seat)] = db;
                 });
 
-                setSeats(
-                    ALL_SEATS.map((seat) => {
-                        const db = lookup[seat.seat_id];
+                const formattedSeats = mapFeatures.flatMap((feature) => {
+                    const p = feature.properties || {};
+                    const coords = feature.geometry?.coordinates;
+                    if (!Array.isArray(coords) || coords.length < 2) return [];
 
-                        if (!db) return seat;
+                    const section = String(p.section || "").trim();
+                    const row = Number(p.row);
+                    const seat = Number(p.seat);
+                    const mapSeatId = p.seat_id || getSeatId(section, row, seat);
 
-                        return {
-                            ...seat,
-                            dbId: db.id,
-                            status: db.status || "available",
-                            category:
-                                db.category ||
-                                STAND_CATEGORIES[seat.stand]?.label
-                        };
-                    })
-                );
+                    const db = dbById[normalizeText(mapSeatId)] || dbByKey[seatKey(section, row, seat)];
+
+                    // SeatMap shows only seats that exist in the selected match database.
+                    if (!db) return [];
+
+                    const point = projectPoint(coords, bounds);
+                    const stand = db.stand || p.stand || guessStand(section);
+
+                    return [{
+                        seat_id: db.seat_id || mapSeatId,
+                        stand,
+                        section,
+                        row,
+                        seat,
+                        status: db.status || p.status || "available",
+                        dbId: db.id ?? null,
+                        x: point.x,
+                        y: point.y,
+                    }];
+                }).sort((a, b) => {
+                    if (a.stand !== b.stand) return (STAND_ORDER[a.stand] || 99) - (STAND_ORDER[b.stand] || 99);
+                    if (a.section !== b.section) return sectionNumber(a.section) - sectionNumber(b.section);
+                    if (a.row !== b.row) return Number(a.row) - Number(b.row);
+                    return Number(a.seat) - Number(b.seat);
+                });
+
+                setSeats(formattedSeats);
             })
-            .catch(() => {});
+            .catch((err) => {
+                console.error("Seat map loading error:", err);
+                setError("Unable to load seat map data.");
+                setSeats([]);
+            })
+            .finally(() => setLoading(false));
     }, [selectedMatch?.id]);
+
+    const selectedList = Object.values(selected);
+    const panels = buildSectionPanels(seats);
+
+    const seatPrice = (seat) => {
+        const multiplier = STAND_CATS[seat.stand]?.multiplier ?? 1;
+        return Math.round((selectedMatch?.price ?? 75) * multiplier);
+    };
 
     const toggle = (seat) => {
         if (seat.status !== "available") return;
 
-        setSelected((previous) => {
-            const next = { ...previous };
-
-            if (next[seat.seat_id]) {
-                delete next[seat.seat_id];
-            } else {
-                next[seat.seat_id] = seat;
-            }
-
+        setSelected((prev) => {
+            const next = { ...prev };
+            if (next[seat.seat_id]) delete next[seat.seat_id];
+            else next[seat.seat_id] = seat;
             return next;
         });
     };
 
-    const selectedList = Object.values(selected);
-
-    const seatPrice = (seat) => {
-        const multiplier =
-            STAND_CATEGORIES[seat.stand]?.multiplier || 1;
-
-        return Math.round((selectedMatch?.price || 75) * multiplier);
-    };
-
-    const [error, setError] = useState("");
-
     const handleContinue = () => {
+        if (selectedList.length === 0) return;
         setError("");
 
         const seatData = selectedList.map((seat) => ({
             id: seat.seat_id,
-            dbId: seat.dbId ?? null,
+            dbId: seat.dbId,
             price: seatPrice(seat),
-            cat: STAND_CATEGORIES[seat.stand]?.label || seat.stand
+            cat: STAND_CATS[seat.stand]?.label ?? seat.stand,
         }));
 
         navigate("/payment", {
@@ -268,12 +275,9 @@ export default function SeatMap() {
                 booking: {
                     seats: seatData,
                     match: selectedMatch,
-                    total: seatData.reduce(
-                        (sum, seat) => sum + seat.price,
-                        0
-                    )
-                }
-            }
+                    total: seatData.reduce((sum, s) => sum + s.price, 0),
+                },
+            },
         });
     };
 
@@ -283,351 +287,174 @@ export default function SeatMap() {
                 {selectedMatch && (
                     <div className="match-header">
                         <div className="match-teams">
-                            {selectedMatch.home}{" "}
-                            <span className="vs">VS</span>{" "}
-                            {selectedMatch.away}
+                            {selectedMatch.home} <span className="vs">VS</span> {selectedMatch.away}
                         </div>
-
                         <div className="match-meta">
-                            📅 {selectedMatch.date} · 🕐 {selectedMatch.time} · 🏟️{" "}
-                            {selectedMatch.stadium}
+                            📅 {selectedMatch.date} · 🕐 {selectedMatch.time} ·  {selectedMatch.stadium}
                         </div>
                     </div>
                 )}
 
                 <div className="sm-layout">
                     <div className="map-card">
-                        <div className="sm-title">
-                            🏟️ {t.seatMap}
-                        </div>
+                        <div className="sm-title"> {t.seatMap}</div>
 
                         <svg
                             viewBox={`0 0 ${SVG_W} ${SVG_H}`}
                             className="stadium-svg"
-                            style={{
-                                width: "100%",
-                                height: "auto",
-                                display: "block"
-                            }}
+                            style={{ width: "100%", height: "auto", display: "block" }}
                         >
-                            <rect
-                                x={0}
-                                y={0}
-                                width={SVG_W}
-                                height={SVG_H}
-                                fill="#f8fafc"
-                                rx={12}
-                            />
+                            <defs>
+                                <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+                                    <feDropShadow dx="0" dy="4" stdDeviation="4" floodOpacity="0.18" />
+                                </filter>
+                                <linearGradient id="fieldGradient" x1="0" y1="0" x2="1" y2="1">
+                                    <stop offset="0" stopColor="#208a3b" />
+                                    <stop offset="1" stopColor="#116129" />
+                                </linearGradient>
+                            </defs>
 
-                            <rect
-                                x={FIELD_X1}
-                                y={FIELD_Y1}
-                                width={FIELD_X2 - FIELD_X1}
-                                height={FIELD_Y2 - FIELD_Y1}
-                                fill="#166534"
-                                rx={6}
-                            />
+                            <rect x="0" y="0" width={SVG_W} height={SVG_H} fill="#f8fafc" rx="16" />
+                            <rect x="55" y="45" width="890" height="675" fill="#f4eee2" rx="18" stroke="#d9d1c2" strokeWidth="1.5" />
 
-                            <rect
-                                x={FIELD_X1 + 8}
-                                y={FIELD_Y1 + 8}
-                                width={FIELD_X2 - FIELD_X1 - 16}
-                                height={FIELD_Y2 - FIELD_Y1 - 16}
-                                fill="none"
-                                stroke="rgba(255,255,255,0.3)"
-                                strokeWidth={1.5}
-                            />
-
-                            <line
-                                x1={FIELD_X1}
-                                y1={(FIELD_Y1 + FIELD_Y2) / 2}
-                                x2={FIELD_X2}
-                                y2={(FIELD_Y1 + FIELD_Y2) / 2}
-                                stroke="rgba(255,255,255,0.25)"
-                                strokeWidth={1.5}
-                            />
-
-                            <circle
-                                cx={(FIELD_X1 + FIELD_X2) / 2}
-                                cy={(FIELD_Y1 + FIELD_Y2) / 2}
-                                r={28}
-                                fill="none"
-                                stroke="rgba(255,255,255,0.25)"
-                                strokeWidth={1.5}
-                            />
-
-                            <text
-                                x={(FIELD_X1 + FIELD_X2) / 2}
-                                y={(FIELD_Y1 + FIELD_Y2) / 2 + 5}
-                                textAnchor="middle"
-                                fill="rgba(255,255,255,0.5)"
-                                fontSize={13}
-                                fontWeight="700"
-                                letterSpacing="2"
-                            >
-                                ⚽
-                            </text>
-
-                            {SECTIONS_DATA.map((section) => {
-                                const [x1, y1] = toSVG(
-                                    section.lonMin,
-                                    section.latMax
-                                );
-
-                                const [x2, y2] = toSVG(
-                                    section.lonMax,
-                                    section.latMin
-                                );
+                            {/* Section panels generated from the same seats.geojson geometry */}
+                            {panels.map((panel) => {
+                                const price = Math.round((selectedMatch?.price ?? 75) * (STAND_CATS[panel.stand]?.multiplier ?? 1));
 
                                 return (
-                                    <rect
-                                        key={section.section}
-                                        x={x1}
-                                        y={y1}
-                                        width={x2 - x1}
-                                        height={y2 - y1}
-                                        fill={section.color}
-                                        fillOpacity={0.12}
-                                        stroke={section.color}
-                                        strokeWidth={0.8}
-                                        strokeOpacity={0.5}
-                                        rx={2}
-                                    />
-                                );
-                            })}
-
-                            {SECTIONS_DATA.map((section) => {
-                                const [x1, y1] = toSVG(
-                                    section.lonMin,
-                                    section.latMax
-                                );
-
-                                const [x2, y2] = toSVG(
-                                    section.lonMax,
-                                    section.latMin
-                                );
-
-                                const category =
-                                    STAND_CATEGORIES[section.stand];
-
-                                const price = category
-                                    ? Math.round(
-                                          (selectedMatch?.price || 75) *
-                                              category.multiplier
-                                      )
-                                    : null;
-
-                                const mx = (x1 + x2) / 2;
-                                const my = (y1 + y2) / 2;
-
-                                return (
-                                    <g key={`label-${section.section}`}>
+                                    <g key={panel.section} filter="url(#softShadow)">
+                                        <polygon
+                                            points={panel.points}
+                                            fill={panel.color}
+                                            fillOpacity="0.88"
+                                            stroke="#ffffff"
+                                            strokeWidth="2"
+                                        />
                                         <text
-                                            x={mx}
-                                            y={my - 4}
+                                            x={panel.cx}
+                                            y={panel.cy - 4}
                                             textAnchor="middle"
-                                            fill={section.color}
-                                            fontSize={6}
-                                            fontWeight="800"
-                                            opacity={0.9}
+                                            fill="#ffffff"
+                                            fontSize="20"
+                                            fontWeight="900"
+                                            style={{ paintOrder: "stroke", stroke: "rgba(0,0,0,0.45)", strokeWidth: 4 }}
                                         >
-                                            {section.section}
+                                            {panel.section}
                                         </text>
-
-                                        {category && (
-                                            <text
-                                                x={mx}
-                                                y={my + 3}
-                                                textAnchor="middle"
-                                                fill={section.color}
-                                                fontSize={5}
-                                                opacity={0.85}
-                                            >
-                                                {category.label}
-                                            </text>
-                                        )}
-
-                                        {price !== null && (
-                                            <text
-                                                x={mx}
-                                                y={my + 10}
-                                                textAnchor="middle"
-                                                fill={section.color}
-                                                fontSize={5}
-                                                opacity={0.8}
-                                            >
-                                                {price} SAR
-                                            </text>
-                                        )}
+                                        <text
+                                            x={panel.cx}
+                                            y={panel.cy + 15}
+                                            textAnchor="middle"
+                                            fill="#ffffff"
+                                            fontSize="9"
+                                            fontWeight="700"
+                                            opacity="0.95"
+                                        >
+                                            {panel.label} · {price} SAR
+                                        </text>
                                     </g>
                                 );
                             })}
 
+                            {/* Field */}
+                            <g filter="url(#softShadow)">
+                                <rect x={FIELD.x - 16} y={FIELD.y - 16} width={FIELD.w + 32} height={FIELD.h + 32} fill="#9ca3af" opacity="0.45" />
+                                <rect x={FIELD.x} y={FIELD.y} width={FIELD.w} height={FIELD.h} fill="url(#fieldGradient)" rx="12" stroke="#ffffff" strokeWidth="3" />
+                                {[0, 1, 2, 3, 4, 5].map((i) => (
+                                    <rect
+                                        key={i}
+                                        x={FIELD.x + (FIELD.w / 6) * i}
+                                        y={FIELD.y}
+                                        width={FIELD.w / 6}
+                                        height={FIELD.h}
+                                        fill={i % 2 === 0 ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.06)"}
+                                    />
+                                ))}
+                                <rect x={FIELD.x + 12} y={FIELD.y + 12} width={FIELD.w - 24} height={FIELD.h - 24} fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="2" />
+                                <line x1={FIELD.x + FIELD.w / 2} y1={FIELD.y} x2={FIELD.x + FIELD.w / 2} y2={FIELD.y + FIELD.h} stroke="rgba(255,255,255,0.75)" strokeWidth="2" />
+                                <circle cx={FIELD.x + FIELD.w / 2} cy={FIELD.y + FIELD.h / 2} r="42" fill="none" stroke="rgba(255,255,255,0.75)" strokeWidth="2" />
+                                <circle cx={FIELD.x + FIELD.w / 2} cy={FIELD.y + FIELD.h / 2} r="4" fill="#ffffff" opacity="0.85" />
+                                <rect x={FIELD.x} y={FIELD.y + 72} width="68" height="116" fill="none" stroke="rgba(255,255,255,0.75)" strokeWidth="2" />
+                                <rect x={FIELD.x + FIELD.w - 68} y={FIELD.y + 72} width="68" height="116" fill="none" stroke="rgba(255,255,255,0.75)" strokeWidth="2" />
+                            </g>
+
+                            {/* Seat dots */}
                             {seats.map((seat) => {
-                                const [x, y] = toSVG(seat.lon, seat.lat);
-
                                 const isSelected = !!selected[seat.seat_id];
-
                                 const disabled = seat.status !== "available";
-
-                                const fill = seatColor(seat, isSelected);
+                                const size = isSelected ? 8 : 5;
 
                                 return (
                                     <rect
                                         key={seat.seat_id}
-                                        x={x - 3.5}
-                                        y={y - 3.5}
-                                        width={7}
-                                        height={7}
-                                        rx={1.5}
-                                        fill={fill}
+                                        x={seat.x - size / 2}
+                                        y={seat.y - size / 2}
+                                        width={size}
+                                        height={size}
+                                        rx="1.4"
+                                        fill={seatFill(seat, isSelected)}
                                         fillOpacity={disabled ? 0.45 : 1}
-                                        stroke={isSelected ? "#5b21b6" : "none"}
-                                        strokeWidth={1}
+                                        stroke={isSelected ? "#ffffff" : "rgba(17,24,39,0.55)"}
+                                        strokeWidth={isSelected ? 2.2 : 0.55}
                                         cursor={disabled ? "not-allowed" : "pointer"}
                                         onClick={() => toggle(seat)}
                                     >
                                         <title>
-                                            {seat.seat_id} |{" "}
-                                            {STAND_CATEGORIES[seat.stand]?.label ||
-                                                seat.stand}{" "}
-                                            | {seatPrice(seat)} SAR | {seat.status}
+                                            {seat.seat_id} | {STAND_CATS[seat.stand]?.label ?? seat.stand} | {seatPrice(seat)} SAR | {seat.status}
                                         </title>
                                     </rect>
                                 );
                             })}
+
+                            {loading && (
+                                <text x={SVG_W / 2} y={SVG_H / 2} textAnchor="middle" fill="#334155" fontSize="18" fontWeight="800">
+                                    Loading seats...
+                                </text>
+                            )}
                         </svg>
 
                         <div className="svg-legend">
-                            <div className="legend-item">
-                                <span
-                                    className="legend-dot"
-                                    style={{ background: "#9b59b6" }}
-                                />
-                                VIP
-                            </div>
-
-                            <div className="legend-item">
-                                <span
-                                    className="legend-dot"
-                                    style={{ background: "#f59e0b" }}
-                                />
-                                Gold
-                            </div>
-
-                            <div className="legend-item">
-                                <span
-                                    className="legend-dot"
-                                    style={{ background: "#2ecc71" }}
-                                />
-                                Premium
-                            </div>
-
-                            <div className="legend-item">
-                                <span
-                                    className="legend-dot"
-                                    style={{ background: "#6b7280" }}
-                                />
-                                Silver
-                            </div>
-
-                            <div className="legend-item">
-                                <span
-                                    className="legend-dot"
-                                    style={{ background: "#7c3aed" }}
-                                />
-                                {t.selected || "Selected"}
-                            </div>
-
-                            <div className="legend-item">
-                                <span
-                                    className="legend-dot"
-                                    style={{ background: "#374151" }}
-                                />
-                                {t.sold}
-                            </div>
+                            <div className="legend-item"><span className="legend-dot" style={{ background: STAND_CATS.West.color }} />VIP</div>
+                            <div className="legend-item"><span className="legend-dot" style={{ background: STAND_CATS.North.color }} />Gold</div>
+                            <div className="legend-item"><span className="legend-dot" style={{ background: STAND_CATS.East.color }} />Premium</div>
+                            <div className="legend-item"><span className="legend-dot" style={{ background: STAND_CATS.South.color }} />Silver</div>
+                            <div className="legend-item"><span className="legend-dot" style={{ background: "#7c3aed" }} />{t.selected ?? "Selected"}</div>
+                            <div className="legend-item"><span className="legend-dot" style={{ background: "#374151" }} />{t.sold ?? "Sold"}</div>
+                            <div className="legend-item"><strong>{seats.length}</strong>&nbsp;Seats</div>
                         </div>
                     </div>
 
                     <div className="sidebar">
                         <div className="summary-card">
-                            <div className="card-title">
-                                {t.selectSeat} ({selectedList.length})
-                            </div>
+                            <div className="card-title">{t.selectSeat} ({selectedList.length})</div>
 
                             {selectedList.length === 0 ? (
-                                <div className="empty-msg">
-                                    {t.noSeatsSelected || "No seats selected yet"}
-                                </div>
+                                <div className="empty-msg">{t.noSeatsSelected ?? "No seats selected yet"}</div>
                             ) : (
                                 <div className="picked-list">
                                     {selectedList.map((seat) => (
-                                        <div
-                                            key={seat.seat_id}
-                                            className="picked-row"
-                                        >
-                                            <button
-                                                className="rm-btn"
-                                                onClick={() => toggle(seat)}
-                                                title="Remove"
-                                            >
-                                                ✕
-                                            </button>
-
+                                        <div key={seat.seat_id} className="picked-row">
+                                            <button className="rm-btn" onClick={() => toggle(seat)} title="Remove">✕</button>
                                             <div className="picked-info">
-                                                <span className="picked-id">
-                                                    {seat.seat_id}
-                                                </span>
-
-                                                <span className="picked-stand">
-                                                    {STAND_CATEGORIES[seat.stand]?.label ||
-                                                        seat.stand}
-                                                </span>
+                                                <span className="picked-id">{seat.seat_id}</span>
+                                                <span className="picked-stand">{STAND_CATS[seat.stand]?.label ?? seat.stand}</span>
                                             </div>
-
-                                            <span className="picked-price">
-                                                {seatPrice(seat)} SAR
-                                            </span>
+                                            <span className="picked-price">{seatPrice(seat)} SAR</span>
                                         </div>
                                     ))}
                                 </div>
                             )}
 
                             <div className="total-row">
-                                <span>
-                                    {t.total || "Total"} ({selectedList.length})
-                                </span>
-
-                                <span>
-                                    {selectedList.reduce(
-                                        (sum, seat) => sum + seatPrice(seat),
-                                        0
-                                    )}{" "}
-                                    SAR
-                                </span>
+                                <span>{t.total ?? "Total"} ({selectedList.length})</span>
+                                <span>{selectedList.reduce((sum, s) => sum + seatPrice(s), 0)} SAR</span>
                             </div>
 
-                            <button
-                                className="continue-btn"
-                                disabled={selectedList.length === 0}
-                                onClick={handleContinue}
-                            >
+                            <button className="continue-btn" disabled={selectedList.length === 0} onClick={handleContinue}>
                                 {t.confirmPayment} →
                             </button>
 
-                            {error && (
-                                <p className="field-error">
-                                    {error}
-                                </p>
-                            )}
-
-
-                            <button
-                                className="back-btn"
-                                onClick={() => navigate("/tickets")}
-                            >
-                                ← {t.back || "Back"}
-                            </button>
+                            {error && <p className="field-error">{error}</p>}
                         </div>
                     </div>
                 </div>

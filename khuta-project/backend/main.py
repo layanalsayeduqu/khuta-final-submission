@@ -13,8 +13,9 @@ from routers.tickets import router as tickets_router
 from routers.seats import router as seats_router
 from routers.payment import router as payment_router
 from routers.bookings import router as bookings_router
-
-
+from routers.favorite_club import router as favorite_club_router
+from routers.home_matches import router as home_matches_router
+from routers.organizer import router as organizer_router
 app = FastAPI(
     title="Khuta API",
     version="1.0.0"
@@ -41,8 +42,9 @@ app.include_router(tickets_router)
 app.include_router(seats_router)
 app.include_router(payment_router)
 app.include_router(bookings_router)
-
-
+app.include_router(favorite_club_router)
+app.include_router(home_matches_router)
+app.include_router(organizer_router)
 @app.get("/")
 def home():
     return {

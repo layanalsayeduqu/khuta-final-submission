@@ -14,7 +14,7 @@ TEST_USERS = [
 ]
 
 MATCH_ID = 1         
-RACE_SEAT = "N1-R1-S1" # م
+RACE_SEAT = "N1-R1-S1" 
 
 START_COORDS = {"start_lon": 39.12256784, "start_lat": 22.089924, "floor": 1}
 EXIT_COORDS  = {"end_lon":   39.12263120, "end_lat":   22.089924, "floor": 1}

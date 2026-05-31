@@ -20,6 +20,8 @@ function Login() {
             ...formData,
             [event.target.name]: event.target.value
         });
+
+        setErrorMessage("");
     };
 
     const handleSubmit = async (event) => {
@@ -34,18 +36,46 @@ function Login() {
                 formData
             );
 
+            const user = response.data.user;
+
             localStorage.setItem(
                 "token",
                 response.data.token
             );
 
-            window.location.href = "/profile";
+            localStorage.setItem(
+                "user_id",
+                user.id
+            );
+
+            localStorage.setItem(
+                "user_name",
+                user.name
+            );
+
+            localStorage.setItem(
+                "user_email",
+                user.email
+            );
+
+            localStorage.setItem(
+                "role",
+                user.role
+            );
+
+            if (user.role?.toLowerCase() === "organizer") {
+                window.location.href = "/organizer";
+            } else {
+                window.location.href = "/";
+            }
+
         } catch (error) {
             setErrorMessage(
                 error.response?.data?.message ||
                 error.response?.data?.detail ||
                 "حدث خطأ أثناء تسجيل الدخول، يرجى المحاولة مرة أخرى."
             );
+
         } finally {
             setLoading(false);
         }

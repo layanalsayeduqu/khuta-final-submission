@@ -17,7 +17,6 @@ ALGORITHM = os.getenv("ALGORITHM")
 
 
 class LoginRequest(BaseModel):
-
     email: EmailStr
     password: str
 
@@ -29,7 +28,6 @@ def login_user(data: LoginRequest):
     cursor = None
 
     try:
-
         connection = get_db_connection()
         cursor = connection.cursor()
 
@@ -41,7 +39,6 @@ def login_user(data: LoginRequest):
         user = cursor.fetchone()
 
         if not user:
-
             raise HTTPException(
                 status_code=404,
                 detail="User not found"
@@ -53,17 +50,18 @@ def login_user(data: LoginRequest):
         )
 
         if not valid_password:
-
             raise HTTPException(
                 status_code=401,
                 detail="Invalid password"
             )
 
+        user_role = user.get("role", "user")
+
         payload = {
             "user_id": user["id"],
             "email": user["email"],
+            "role": user_role,
             "exp": datetime.now(timezone.utc) + timedelta(hours=2)
-
         }
 
         token = jwt.encode(
@@ -79,7 +77,8 @@ def login_user(data: LoginRequest):
             "user": {
                 "id": user["id"],
                 "name": user["name"],
-                "email": user["email"]
+                "email": user["email"],
+                "role": user_role
             }
         }
 
@@ -87,14 +86,12 @@ def login_user(data: LoginRequest):
         raise error
 
     except Exception as error:
-
         raise HTTPException(
             status_code=500,
             detail=str(error)
         )
 
     finally:
-
         if cursor:
             cursor.close()
 

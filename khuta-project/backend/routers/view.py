@@ -90,10 +90,11 @@ def run_route(start_node_id, end_node_id):
 
 @router.get("/directions/poi-to-poi")
 def route_poi_to_poi(start_poi_id: str, end_poi_id: str):
-    start_poi_int = int(start_poi_id.split("=")[1])
-    end_poi_int = int(end_poi_id.split("=")[1])
+    
+    start_id_clean = start_poi_id.split("=")[-1]
+    end_id_clean = end_poi_id.split("=")[-1]
 
-    if start_poi_int == end_poi_int:
+    if start_id_clean == end_id_clean:
         return {"error": "route poi to poi", "reason": "Error: The start and end locations are the same"}
 
     conn = get_db_connection()
@@ -104,15 +105,16 @@ def route_poi_to_poi(start_poi_id: str, end_poi_id: str):
             SELECT id, name_ar, ST_X(geom) AS lon, ST_Y(geom) AS lat, type
             FROM facilities
             WHERE id = %s;
-        """, (start_poi_int,))
+        """, (start_id_clean,))
         start_poi = cur.fetchone()
 
         cur.execute("""
             SELECT id, name_ar, ST_X(geom) AS lon, ST_Y(geom) AS lat, type
             FROM facilities
             WHERE id = %s;
-        """, (end_poi_int,))
+        """, (end_id_clean,))
         end_poi = cur.fetchone()
+        
     except Exception as e:
         logger.error(f"error fetching facility: {e}")
         return {"error": "no facility found with given id"}

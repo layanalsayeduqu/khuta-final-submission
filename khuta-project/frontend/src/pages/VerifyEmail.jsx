@@ -7,32 +7,25 @@ function VerifyEmail() {
     const { t } = useLanguage();
     const navigate = useNavigate();
     const [params] = useSearchParams();
-
     const email = params.get("email");
-
     const [code, setCode] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
-
     const handleVerify = async (event) => {
         event.preventDefault();
         setLoading(true);
         setError("");
         setSuccess("");
-
         try {
             await API.post("/auth/verify-email", {
                 email,
                 code
             });
-
             setSuccess("Email verified successfully");
-
             setTimeout(() => {
                 navigate("/login");
             }, 1200);
-
         } catch (error) {
             setError(
                 error.response?.data?.detail ||
@@ -41,9 +34,8 @@ function VerifyEmail() {
 
         } finally {
             setLoading(false);
-        }
+      }
     };
-
     return (
         <main className="auth-page">
             <section className="auth-card">
