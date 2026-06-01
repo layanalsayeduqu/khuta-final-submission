@@ -1,8 +1,9 @@
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, EmailStr
-from jose import jwt
-from datetime import datetime, timedelta, timezone
 import os
+from datetime import datetime, timedelta, timezone
+
+from fastapi import APIRouter, HTTPException
+from jose import jwt
+from pydantic import BaseModel, EmailStr
 
 from database import get_db_connection
 from utils.security import verify_password
@@ -14,6 +15,7 @@ router = APIRouter(
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM")
+TOKEN_EXPIRATION_HOURS = 2
 
 
 class LoginRequest(BaseModel):
@@ -21,9 +23,50 @@ class LoginRequest(BaseModel):
     password: str
 
 
+def get_user_by_email(cursor, email: str):
+    cursor.execute(
+        "SELECT * FROM users WHERE email = %s;",
+        (email,)
+    )
+
+    return cursor.fetchone()
+
+
+def get_user_role(user):
+    return user.get("role", "user")
+
+
+def create_access_token(user, role: str):
+    payload = {
+        "user_id": user["id"],
+        "email": user["email"],
+        "role": role,
+        "exp": datetime.now(timezone.utc) + timedelta(hours=TOKEN_EXPIRATION_HOURS)
+    }
+
+    return jwt.encode(
+        payload,
+        SECRET_KEY,
+        algorithm=ALGORITHM
+    )
+
+
+def format_login_response(user, role: str, token: str):
+    return {
+        "success": True,
+        "message": "Login successful",
+        "token": token,
+        "user": {
+            "id": user["id"],
+            "name": user["name"],
+            "email": user["email"],
+            "role": role
+        }
+    }
+
+
 @router.post("/login")
 def login_user(data: LoginRequest):
-
     connection = None
     cursor = None
 
@@ -31,12 +74,7 @@ def login_user(data: LoginRequest):
         connection = get_db_connection()
         cursor = connection.cursor()
 
-        cursor.execute(
-            "SELECT * FROM users WHERE email = %s;",
-            (data.email,)
-        )
-
-        user = cursor.fetchone()
+        user = get_user_by_email(cursor, data.email)
 
         if not user:
             raise HTTPException(
@@ -55,35 +93,13 @@ def login_user(data: LoginRequest):
                 detail="Invalid password"
             )
 
-        user_role = user.get("role", "user")
+        user_role = get_user_role(user)
+        token = create_access_token(user, user_role)
 
-        payload = {
-            "user_id": user["id"],
-            "email": user["email"],
-            "role": user_role,
-            "exp": datetime.now(timezone.utc) + timedelta(hours=2)
-        }
+        return format_login_response(user, user_role, token)
 
-        token = jwt.encode(
-            payload,
-            SECRET_KEY,
-            algorithm=ALGORITHM
-        )
-
-        return {
-            "success": True,
-            "message": "Login successful",
-            "token": token,
-            "user": {
-                "id": user["id"],
-                "name": user["name"],
-                "email": user["email"],
-                "role": user_role
-            }
-        }
-
-    except HTTPException as error:
-        raise error
+    except HTTPException:
+        raise
 
     except Exception as error:
         raise HTTPException(

@@ -1,7 +1,8 @@
-from fastapi import APIRouter, HTTPException, Header
-from pydantic import BaseModel
-from jose import jwt, JWTError
 import os
+
+from fastapi import APIRouter, Header, HTTPException
+from jose import JWTError, jwt
+from pydantic import BaseModel
 
 from database import get_db_connection
 
@@ -15,7 +16,6 @@ ALGORITHM = os.getenv("ALGORITHM")
 
 
 class UpdateProfileRequest(BaseModel):
-
     name: str
     gender: str
     age: int
@@ -23,45 +23,55 @@ class UpdateProfileRequest(BaseModel):
     favorite_club: str
 
 
+def extract_token(authorization: str):
+    if not authorization:
+        raise HTTPException(
+            status_code=401,
+            detail="Authorization token missing"
+        )
+
+    return authorization.replace("Bearer ", "", 1)
+
+
 def get_current_user(token: str):
-
     try:
-
-        payload = jwt.decode(
+        return jwt.decode(
             token,
             SECRET_KEY,
             algorithms=[ALGORITHM]
         )
 
-        return payload
-
     except JWTError:
-
         raise HTTPException(
             status_code=401,
             detail="Invalid token"
         )
 
 
+def format_profile_response(user):
+    return {
+        "success": True,
+        "user": {
+            "id": user["id"],
+            "name": user["name"],
+            "email": user["email"],
+            "gender": user["gender"],
+            "age": user["age"],
+            "phone": user["phone"],
+            "favorite_club": user["favorite_club"]
+        }
+    }
+
+
 @router.get("/me")
 def get_my_profile(authorization: str = Header(None)):
-
-    if not authorization:
-
-        raise HTTPException(
-            status_code=401,
-            detail="Authorization token missing"
-        )
-
-    token = authorization.replace("Bearer ", "")
-
+    token = extract_token(authorization)
     payload = get_current_user(token)
 
     connection = None
     cursor = None
 
     try:
-
         connection = get_db_connection()
         cursor = connection.cursor()
 
@@ -73,27 +83,14 @@ def get_my_profile(authorization: str = Header(None)):
         user = cursor.fetchone()
 
         if not user:
-
             raise HTTPException(
                 status_code=404,
                 detail="User not found"
             )
 
-        return {
-            "success": True,
-            "user": {
-                "id": user["id"],
-                "name": user["name"],
-                "email": user["email"],
-                "gender": user["gender"],
-                "age": user["age"],
-                "phone": user["phone"],
-                "favorite_club": user["favorite_club"]
-            }
-        }
+        return format_profile_response(user)
 
     finally:
-
         if cursor:
             cursor.close()
 
@@ -106,23 +103,13 @@ def update_profile(
     data: UpdateProfileRequest,
     authorization: str = Header(None)
 ):
-
-    if not authorization:
-
-        raise HTTPException(
-            status_code=401,
-            detail="Authorization token missing"
-        )
-
-    token = authorization.replace("Bearer ", "")
-
+    token = extract_token(authorization)
     payload = get_current_user(token)
 
     connection = None
     cursor = None
 
     try:
-
         connection = get_db_connection()
         cursor = connection.cursor()
 
@@ -135,8 +122,7 @@ def update_profile(
                 phone = %s,
                 favorite_club = %s
             WHERE id = %s;
-        """,
-        (
+        """, (
             data.name,
             data.gender,
             data.age,
@@ -153,14 +139,12 @@ def update_profile(
         }
 
     except Exception as error:
-
         raise HTTPException(
             status_code=500,
             detail=str(error)
         )
 
     finally:
-
         if cursor:
             cursor.close()
 

@@ -5,11 +5,53 @@ import { useLanguage } from "../context/LanguageContext";
 
 function MyBookings() {
     const navigate = useNavigate();
-    const { t } = useLanguage();
+    const { t, lang } = useLanguage();
     const token = localStorage.getItem("token");
 
     const [tickets, setTickets] = useState([]);
     const [loading, setLoading] = useState(true);
+
+    const translateTeamName = (teamName) => {
+        const teamMap = {
+            "Al Hilal": t.alHilal,
+            "Al Nassr": t.alNassr,
+            "Al Raed": t.alRaed,
+            "Al read": t.alRaed,
+            "Al Riyadh": t.alRiyadh,
+            "Al Wehda": t.alWehda,
+            "Al Fayha": t.alFayha,
+            "Al Taawon": t.alTaawon,
+            "Al Ittihad": t.alIttihad,
+            "Al Ahli": t.alAhli,
+            "Al Qadsiah": t.alQadsiah,
+            "Al Qadiah": t.alQadsiah,
+            "Al Shabab": lang === "ar" ? "الشباب" : "Al Shabab",
+            "Al Ettifaq": lang === "ar" ? "الاتفاق" : "Al Ettifaq"
+        };
+
+        return teamMap[teamName] || teamName;
+    };
+
+    const translateStadiumName = (stadiumName) => {
+        const stadiumMap = {
+            international_stadium: lang === "ar" ? "الاستاد الدولي" : "International Stadium",
+            king_abdullah_sports_city: lang === "ar" ? "مدينة الملك عبدالله الرياضية" : "King Abdullah Sports City",
+            "Prince Faisal Stadium": lang === "ar" ? "ملعب الأمير فيصل" : "Prince Faisal Stadium"
+        };
+
+        return stadiumMap[stadiumName] || stadiumName;
+    };
+
+    const translateStatus = (status) => {
+        const statusMap = {
+            booked: lang === "ar" ? "محجوزة" : "Booked",
+            active: lang === "ar" ? "نشطة" : "Active",
+            used: lang === "ar" ? "مستخدمة" : "Used",
+            cancelled: lang === "ar" ? "ملغاة" : "Cancelled"
+        };
+
+        return statusMap[String(status || "").toLowerCase()] || status;
+    };
 
     useEffect(() => {
         if (!token) {
@@ -50,34 +92,40 @@ function MyBookings() {
         <div className="page">
             <div className="bookings-header">
                 <h1 className="bookings-title">{t.myBookings}</h1>
-                <p className="bookings-sub">{t.myBookingsSub}</p>
+                <p className="bookings-sub">
+                    {t.myBookingsSub || (lang === "ar" ? "جميع حجوزاتك وتذاكرك في مكان واحد" : "All your bookings and tickets in one place")}
+                </p>
             </div>
 
             {loading ? (
                 <div className="empty-msg">{t.loading}</div>
             ) : tickets.length === 0 ? (
-                <div className="empty-msg">{t.noTicketsFound}</div>
+                <div className="empty-msg">
+                    {t.noTicketsFound || (lang === "ar" ? "لا توجد تذاكر" : "No tickets found")}
+                </div>
             ) : (
                 <div className="tickets-grid">
                     {tickets.map((ticket) => (
                         <div key={ticket.id} className="ticket-card">
                             <div className="ticket-header">
                                 <div className="teams">
-                                    {ticket.home_team}
-                                    <span className="vs">VS</span>
-                                    {ticket.away_team}
+                                    {translateTeamName(ticket.home_team)}
+                                    <span className="vs">
+                                        {lang === "ar" ? "ضد" : "VS"}
+                                    </span>
+                                    {translateTeamName(ticket.away_team)}
                                 </div>
                                 <span className="status-badge badge-active">
-                                    {ticket.status}
+                                    {translateStatus(ticket.status)}
                                 </span>
                             </div>
 
                             <div className="ticket-details">
-                                <div>📍 {ticket.stadium_name}</div>
+                                <div>📍 {translateStadiumName(ticket.stadium_name)}</div>
                                 <div>📅 {ticket.match_date}</div>
                                 <div>🕐 {ticket.match_time}</div>
                                 <div>🎫 {t.seatNumber}: {ticket.seat_number}</div>
-                                <div>💰 {ticket.price} SAR</div>
+                                <div>💰 {ticket.price} {lang === "ar" ? "ريال" : "SAR"}</div>
                             </div>
 
                             {ticket.qr_token && (
@@ -88,7 +136,9 @@ function MyBookings() {
                                         level="H"
                                         marginSize={2}
                                     />
-                                    <p className="qr-hint">{t.scanAtGate}</p>
+                                    <p className="qr-hint">
+                                        {t.scanAtGate || (lang === "ar" ? "امسح الرمز عند البوابة" : "Scan at the gate")}
+                                    </p>
                                 </div>
                             )}
                         </div>

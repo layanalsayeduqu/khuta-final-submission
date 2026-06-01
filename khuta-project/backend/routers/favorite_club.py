@@ -5,12 +5,6 @@ from database import get_db_connection
 
 router = APIRouter(tags=["Favorite Club"])
 
-
-class FavoriteClubRequest(BaseModel):
-    user_id: int = Field(..., ge=1)
-    favorite_club: str
-
-
 CLUB_MAPPER = {
     "alhilal": "الهلال",
     "alnassr": "النصر",
@@ -28,6 +22,51 @@ REVERSE_CLUB_MAPPER = {
     "الشباب": "alshabab",
     "الاتفاق": "alettifaq"
 }
+
+EMPTY_FAVORITE_VALUES = ["EMPTY", "NULL", "NONE", ""]
+
+
+class FavoriteClubRequest(BaseModel):
+    user_id: int = Field(..., ge=1)
+    favorite_club: str
+
+
+def is_empty_favorite_club(favorite_club):
+    if not favorite_club:
+        return True
+
+    favorite_club = str(favorite_club).strip()
+
+    return favorite_club.upper() in EMPTY_FAVORITE_VALUES
+
+
+def format_match(match):
+    match_time = match["match_time"]
+
+    return {
+        "id": match["id"],
+        "home_team_id": REVERSE_CLUB_MAPPER.get(
+            match["home_team"],
+            match["home_team"]
+        ),
+        "away_team_id": REVERSE_CLUB_MAPPER.get(
+            match["away_team"],
+            match["away_team"]
+        ),
+        "date": match_time.strftime("%Y-%m-%d"),
+        "time": match_time.strftime("%H:%M"),
+        "stadium": match["stadium"],
+        "score": "VS",
+        "price": 150,
+        "live": False
+    }
+
+
+def empty_favorite_response():
+    return {
+        "favoriteClub": None,
+        "matches": []
+    }
 
 
 @router.get("/api/matches/favorite")
@@ -55,20 +94,10 @@ def get_favorite_matches(user_id: int):
 
         favorite_club = user_data["favorite_club"]
 
-        if not favorite_club:
-            return {
-                "favoriteClub": None,
-                "matches": []
-            }
+        if is_empty_favorite_club(favorite_club):
+            return empty_favorite_response()
 
         favorite_club = str(favorite_club).strip()
-
-        if favorite_club.upper() in ["EMPTY", "NULL", "NONE", ""]:
-            return {
-                "favoriteClub": None,
-                "matches": []
-            }
-
         favorite_club_arabic = CLUB_MAPPER.get(
             favorite_club,
             favorite_club
@@ -89,28 +118,10 @@ def get_favorite_matches(user_id: int):
 
         raw_matches = cursor.fetchall()
 
-        formatted_matches = []
-
-        for match in raw_matches:
-            match_time = match["match_time"]
-
-            formatted_matches.append({
-                "id": match["id"],
-                "home_team_id": REVERSE_CLUB_MAPPER.get(
-                    match["home_team"],
-                    match["home_team"]
-                ),
-                "away_team_id": REVERSE_CLUB_MAPPER.get(
-                    match["away_team"],
-                    match["away_team"]
-                ),
-                "date": match_time.strftime("%Y-%m-%d"),
-                "time": match_time.strftime("%H:%M"),
-                "stadium": match["stadium"],
-                "score": "VS",
-                "price": 150,
-                "live": False
-            })
+        formatted_matches = [
+            format_match(match)
+            for match in raw_matches
+        ]
 
         return {
             "favoriteClub": REVERSE_CLUB_MAPPER.get(
@@ -120,8 +131,8 @@ def get_favorite_matches(user_id: int):
             "matches": formatted_matches
         }
 
-    except HTTPException as error:
-        raise error
+    except HTTPException:
+        raise
 
     except Exception as error:
         print("Favorite matches error:", error)
@@ -156,15 +167,12 @@ def update_favorite_club(payload: FavoriteClubRequest):
         connection = get_db_connection()
         cursor = connection.cursor()
 
-        cursor.execute(
-            """
+        cursor.execute("""
             UPDATE users
             SET favorite_club = %s
             WHERE id = %s
             RETURNING id;
-            """,
-            (favorite_club, payload.user_id)
-        )
+        """, (favorite_club, payload.user_id))
 
         updated_user = cursor.fetchone()
 
@@ -181,8 +189,8 @@ def update_favorite_club(payload: FavoriteClubRequest):
             "favoriteClub": favorite_club
         }
 
-    except HTTPException as error:
-        raise error
+    except HTTPException:
+        raise
 
     except Exception as error:
         print("Update favorite club error:", error)

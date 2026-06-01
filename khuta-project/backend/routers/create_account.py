@@ -25,23 +25,12 @@ def register_user(user: RegisterRequest):
     cursor = None
 
     try:
-        if len(user.password.encode("utf-8")) > 72:
-            raise HTTPException(
-                status_code=400,
-                detail="كلمة المرور طويلة جدًا"
-            )
+        validate_password_length(user.password)
 
         connection = get_db_connection()
         cursor = connection.cursor()
 
-        cursor.execute(
-            "SELECT * FROM users WHERE email = %s;",
-            (user.email,)
-        )
-
-        existing_user = cursor.fetchone()
-
-        if existing_user:
+        if email_exists(cursor, user.email):
             raise HTTPException(
                 status_code=400,
                 detail="Email already exists"
@@ -60,8 +49,7 @@ def register_user(user: RegisterRequest):
             )
             VALUES (%s, %s, %s, %s, %s, %s)
             RETURNING id;
-        """,
-        (
+        """, (
             user.name,
             user.email,
             hashed_password,
@@ -79,8 +67,8 @@ def register_user(user: RegisterRequest):
             "user_id": new_user["id"]
         }
 
-    except HTTPException as error:
-        raise error
+    except HTTPException:
+        raise
 
     except Exception as error:
         raise HTTPException(
@@ -94,3 +82,20 @@ def register_user(user: RegisterRequest):
 
         if connection:
             connection.close()
+
+
+def validate_password_length(password: str):
+    if len(password.encode("utf-8")) > 72:
+        raise HTTPException(
+            status_code=400,
+            detail="كلمة المرور طويلة جدًا"
+        )
+
+
+def email_exists(cursor, email: str):
+    cursor.execute(
+        "SELECT * FROM users WHERE email = %s;",
+        (email,)
+    )
+
+    return cursor.fetchone() is not None

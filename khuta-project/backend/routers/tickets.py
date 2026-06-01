@@ -1,15 +1,19 @@
-from fastapi import APIRouter, HTTPException, Header
-import psycopg2.extras
-from jose import jwt, JWTError
 import os
 from decimal import Decimal
+
+import psycopg2.extras
+from fastapi import APIRouter, Header, HTTPException
+from jose import JWTError, jwt
 
 from database import get_db_connection
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM")
 
-router = APIRouter(prefix="/api/tickets", tags=["Tickets"])
+router = APIRouter(
+    prefix="/api/tickets",
+    tags=["Tickets"]
+)
 
 
 def get_user_id_from_token(authorization: str):
@@ -25,7 +29,7 @@ def get_user_id_from_token(authorization: str):
             detail="Invalid authorization format"
         )
 
-    token = authorization.replace("Bearer ", "")
+    token = authorization.replace("Bearer ", "", 1)
 
     try:
         payload = jwt.decode(
@@ -51,6 +55,52 @@ def get_user_id_from_token(authorization: str):
         )
 
 
+def format_match(match):
+    base_price = match["base_price"]
+
+    if isinstance(base_price, Decimal):
+        base_price = float(base_price)
+
+    return {
+        "id": match["id"],
+        "home_team": match["home_team"],
+        "away_team": match["away_team"],
+        "date": match["match_time"].strftime("%Y-%m-%d"),
+        "time": match["match_time"].strftime("%H:%M"),
+        "stadium_name": match["stadium_name"],
+        "base_price": base_price,
+        "status": match["status"]
+    }
+
+
+def format_user_seat(row):
+    return {
+        "ticket_id": row["ticket_id"],
+        "user_id": row["user_id"],
+        "user_name": row["user_name"],
+        "ticket_status": row["ticket_status"],
+
+        "match_id": row["match_id_in_matches"],
+        "seat_id": row["seat_id_in_seats"],
+        "seat_code": row["seat_code"],
+
+        "stand": row["stand"],
+        "section": row["section"],
+        "row": row["row"],
+        "seat": row["seat"],
+        "seat_status": row["seat_status"],
+        "poi_id": row["poi_id"],
+        "lon": row["lon"],
+        "lat": row["lat"],
+
+        "match": {
+            "home_team": row["home_team"],
+            "away_team": row["away_team"],
+            "stadium": row["stadium"]
+        }
+    }
+
+
 @router.get("/matches")
 def get_matches():
     connection = None
@@ -58,7 +108,9 @@ def get_matches():
 
     try:
         connection = get_db_connection()
-        cursor = connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cursor = connection.cursor(
+            cursor_factory=psycopg2.extras.RealDictCursor
+        )
 
         cursor.execute("""
             SELECT
@@ -74,21 +126,10 @@ def get_matches():
 
         matches = cursor.fetchall()
 
-        result = []
-
-        for match in matches:
-            result.append({
-                "id": match["id"],
-                "home_team": match["home_team"],
-                "away_team": match["away_team"],
-                "date": match["match_time"].strftime("%Y-%m-%d"),
-                "time": match["match_time"].strftime("%H:%M"),
-                "stadium_name": match["stadium_name"],
-                "base_price": float(match["base_price"]) if isinstance(match["base_price"], Decimal) else match["base_price"],
-                "status": match["status"]
-            })
-
-        return result
+        return [
+            format_match(match)
+            for match in matches
+        ]
 
     except Exception as error:
         raise HTTPException(
@@ -113,7 +154,9 @@ def get_my_seat(authorization: str = Header(None)):
         user_id = get_user_id_from_token(authorization)
 
         connection = get_db_connection()
-        cursor = connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cursor = connection.cursor(
+            cursor_factory=psycopg2.extras.RealDictCursor
+        )
 
         cursor.execute("""
             SELECT 
@@ -170,31 +213,7 @@ def get_my_seat(authorization: str = Header(None)):
                 detail="Ticket found, but linked match was not found"
             )
 
-        return {
-            "ticket_id": row["ticket_id"],
-            "user_id": row["user_id"],
-            "user_name": row["user_name"],
-            "ticket_status": row["ticket_status"],
-
-            "match_id": row["match_id_in_matches"],
-            "seat_id": row["seat_id_in_seats"],
-            "seat_code": row["seat_code"],
-
-            "stand": row["stand"],
-            "section": row["section"],
-            "row": row["row"],
-            "seat": row["seat"],
-            "seat_status": row["seat_status"],
-            "poi_id": row["poi_id"],
-            "lon": row["lon"],
-            "lat": row["lat"],
-
-            "match": {
-                "home_team": row["home_team"],
-                "away_team": row["away_team"],
-                "stadium": row["stadium"]
-            }
-        }
+        return format_user_seat(row)
 
     except HTTPException:
         raise

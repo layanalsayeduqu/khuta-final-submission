@@ -1,9 +1,12 @@
-from fastapi import APIRouter, HTTPException
 import psycopg2.extras
+from fastapi import APIRouter, HTTPException
 
 from database import get_db_connection
 
-router = APIRouter(prefix="/api/seats", tags=["Seats"])
+router = APIRouter(
+    prefix="/api/seats",
+    tags=["Seats"]
+)
 
 
 @router.get("/matches/{match_id}")
@@ -13,7 +16,9 @@ def get_seats(match_id: int):
 
     try:
         connection = get_db_connection()
-        cursor = connection.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cursor = connection.cursor(
+            cursor_factory=psycopg2.extras.RealDictCursor
+        )
 
         cursor.execute("""
             SELECT
@@ -26,11 +31,13 @@ def get_seats(match_id: int):
                 status,
                 stand AS category,
                 (status = 'available') AS is_available
-                FROM seats
-                ORDER BY id;
-                """)
+            FROM seats
+            ORDER BY id;
+        """)
 
-        return cursor.fetchall()
+        seats = cursor.fetchall()
+
+        return seats
 
     except Exception as error:
         raise HTTPException(

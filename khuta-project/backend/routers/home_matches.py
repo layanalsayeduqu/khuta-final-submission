@@ -6,6 +6,8 @@ router = APIRouter(
     tags=["Home Matches"]
 )
 
+LEAGUE_NAME = "دوري روشن السعودي"
+
 
 @router.get("/matches")
 def get_home_matches():
@@ -16,7 +18,6 @@ def get_home_matches():
         connection = get_db_connection()
         cursor = connection.cursor()
 
-        # Live match: المباراة الحالية فقط
         cursor.execute("""
             SELECT
                 id,
@@ -35,28 +36,8 @@ def get_home_matches():
         """)
 
         live_row = cursor.fetchone()
+        live_match = format_live_match(live_row) if live_row else None
 
-        live_match = None
-
-        if live_row:
-            live_match = {
-                "id": live_row["id"],
-                "home_team": live_row["home_team"],
-                "away_team": live_row["away_team"],
-                "date": live_row["match_time"].isoformat(),
-                "league": "دوري روشن السعودي",
-                "stadium": live_row["stadium"],
-                "status": live_row["status"],
-
-                # أسماء الداتابيس: home_score / away_score
-                # أسماء الفرونت: home_goals / away_goals
-                "home_goals": live_row["home_score"],
-                "away_goals": live_row["away_score"],
-
-                "minute": live_row["minute"]
-            }
-
-        # Upcoming matches: المباريات القادمة فقط
         cursor.execute("""
             SELECT
                 id,
@@ -72,20 +53,10 @@ def get_home_matches():
         """)
 
         upcoming_rows = cursor.fetchall()
-
-        upcoming_matches = []
-
-        for row in upcoming_rows:
-            upcoming_matches.append({
-                "id": row["id"],
-                "home_team": row["home_team"],
-                "away_team": row["away_team"],
-                "date": row["match_time"].isoformat(),
-                "league": "دوري روشن السعودي",
-                "stadium": row["stadium"],
-                "status": row["status"],
-                "base_price": row["base_price"]
-            })
+        upcoming_matches = [
+            format_upcoming_match(row)
+            for row in upcoming_rows
+        ]
 
         return {
             "liveMatch": live_match,
@@ -105,3 +76,31 @@ def get_home_matches():
 
         if connection:
             connection.close()
+
+
+def format_live_match(row):
+    return {
+        "id": row["id"],
+        "home_team": row["home_team"],
+        "away_team": row["away_team"],
+        "date": row["match_time"].isoformat(),
+        "league": LEAGUE_NAME,
+        "stadium": row["stadium"],
+        "status": row["status"],
+        "home_goals": row["home_score"],
+        "away_goals": row["away_score"],
+        "minute": row["minute"]
+    }
+
+
+def format_upcoming_match(row):
+    return {
+        "id": row["id"],
+        "home_team": row["home_team"],
+        "away_team": row["away_team"],
+        "date": row["match_time"].isoformat(),
+        "league": LEAGUE_NAME,
+        "stadium": row["stadium"],
+        "status": row["status"],
+        "base_price": row["base_price"]
+    }

@@ -1,9 +1,7 @@
-import {
-    createContext,
-    useContext,
-    useEffect,
-    useState
-} from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
+
+const DEFAULT_LANGUAGE = "en";
+const ARABIC_LANGUAGE = "ar";
 
 const TRANSLATIONS = {
     en: {
@@ -13,8 +11,9 @@ const TRANSLATIONS = {
         profile: "My Profile",
         map: "Guide Me",
         logout: "Logout",
-         projectTitle: "Khuta",
-        projectSubtitle: "Your smart companion inside the stadium. Book, locate your gate & seat, and live the match experience intelligently.",
+        projectTitle: "Khuta",
+        projectSubtitle:
+            "Your smart companion inside the stadium. Book, locate your gate & seat, and live the match experience intelligently.",
         liveScore: "Live Score",
         upcomingMatchesHome: "Upcoming Matches",
         liveNow: "LIVE",
@@ -27,6 +26,9 @@ const TRANSLATIONS = {
         alWehda: "Al Wehda Club",
         alFayha: "Al-Fayha",
         alTaawon: "Al Taawon",
+        alIttihad: "Al Ittihad",
+        alAhli: "Al Ahli",
+        alQadsiah: "Al Qadsiah",
 
         welcome: "Welcome to Khuta Stadium",
         subtitle: "Book matches, choose your seat, and navigate inside the stadium easily.",
@@ -51,23 +53,7 @@ const TRANSLATIONS = {
 
         tickets: "Tickets",
         myBookings: "My Bookings",
-     favorites: "My Favorites",
-        selectClub: "Select Your Club",
-        saveFavoriteClub: "Save Favorite Club",
-        upcomingMatches: "Upcoming Matches",
-        startsFrom: "Starting from",
-        viewDetails: "View Details",
-        bookTicket: "Book Ticket",
-        noMatches: "No upcoming matches for your favorite club.",
-        upcomingMatchesCount: "upcoming matches",
-        alhilal: "Al Hilal",
-        alnassr: "Al Nassr",
-        alittihad: "Al Ittihad",
-        alahli: "Al Ahli",
-        alshabab: "Al Shabab",
-        alettifaq: "Al Ettifaq",
-        payment: "Payment",
-        seatMap: "Seat Map",
+        favorites: "My Favorites",
         payment: "Payment",
         seatMap: "Seat Map",
 
@@ -100,7 +86,8 @@ const TRANSLATIONS = {
         profileUpdated: "Profile updated successfully",
 
         mainTitle: "Stadium Navigation",
-        mainSubtitle: "Choose your start point, select your destination, and find the best route.",
+        mainSubtitle:
+            "Choose your start point, select your destination, and find the best route.",
         findRoute: "Find Best Route",
         backendRouting: "Smart indoor routing",
         startPoint: "From",
@@ -111,7 +98,8 @@ const TRANSLATIONS = {
         calculatingRoute: "Calculating route...",
         routeError: "Error",
         failedBackend: "Failed to connect to backend",
-        twoPointsSelected: "Two points selected. Click Find Best Route to calculate the route.",
+        twoPointsSelected:
+            "Two points selected. Click Find Best Route to calculate the route.",
         startSelected: "Start point selected. Select the destination point.",
         selectTwoPointsFirst: "Select any two points on the map first.",
 
@@ -120,7 +108,8 @@ const TRANSLATIONS = {
         selectStartFirst: "Select a start point first to find the nearest facilities.",
         loadingNearest: "Loading nearest facilities...",
         noNearbyResults: "No nearby results.",
-        clickFacilityHint: "Click a facility icon on the map to show the nearest places of the same type.",
+        clickFacilityHint:
+            "Click a facility icon on the map to show the nearest places of the same type.",
         couldNotLoadNearby: "Could not load nearby facilities.",
         approxDistance: "Approx. distance",
         distance: "Distance",
@@ -139,7 +128,7 @@ const TRANSLATIONS = {
             exit: "Emergency Exit",
             prayer: "Prayer Room",
             gate: "Entry Gate",
-            facility: "Facility"
+            facility: "Facility",
         },
 
         gateClickArea: "Gate selected",
@@ -156,67 +145,25 @@ const TRANSLATIONS = {
 
         youReachedDestination: "You have reached your destination",
         goToSection: "Go to section",
-        seatGuidanceNote: "Go to the selected section and look for your row and seat number.",
-            organizerPanel: "Organizer Panel",
-        dashboard: "Dashboard",
-
-        organizerDashboard: "Organizer Dashboard",
-        organizerDashboardDesc: "Manage matches and stadium facilities.",
-
-        matches: "Matches",
-        facilities: "Facilities",
-
-        manageMatches: "Manage Matches",
-        manageMatchesDesc: "Add, update, and cancel matches from the database.",
-        addMatch: "Add Match",
-        updateMatch: "Update Match",
-        cancelEdit: "Cancel Edit",
-        matchAdded: "Match added successfully",
-        matchUpdated: "Match updated successfully",
-        matchSaveFailed: "Failed to save match",
-        confirmCancelMatch: "Are you sure you want to cancel this match?",
-        noMatchesFound: "No matches found",
-
-        homeTeam: "Home Team",
-        awayTeam: "Away Team",
-        matchTime: "Match Time",
-        stadium: "Stadium",
-        basePrice: "Base Price",
-        homeScore: "Home Score",
-        awayScore: "Away Score",
-        minute: "Minute",
-        score: "Score",
-        actions: "Actions",
-        edit: "Edit",
-        cancel: "Cancel",
-
-        manageFacilities: "Manage Facilities",
-        manageFacilitiesDesc: "Add and delete stadium facilities from the database.",
-        facilityName: "Facility Name",
-        facilityType: "Type",
-        geom: "Geom",
-        addFacility: "Add Facility",
-        facilityAdded: "Facility added successfully",
-        facilityAddFailed: "Failed to add facility",
-        confirmDeleteFacility: "Are you sure you want to delete this facility?",
-        noFacilitiesFound: "No facilities found",
-        delete: "Delete"
-            },
+        seatGuidanceNote:
+            "Go to the selected section and look for your row and seat number.",
+    },
 
     ar: {
         home: "الرئيسية",
         login: "تسجيل الدخول",
         register: "إنشاء حساب",
         profile: "ملفي الشخصي",
-         map: "وجّهني",
+        map: "وجّهني",
         logout: "تسجيل الخروج",
         projectTitle: "خُطى",
-        projectSubtitle: "رَفِيقُك الذكي دَاخِل المَلعَب. احجِز، حَدِّد بَوَّابَتِك ومَقعَدِك، وعِش أَجوَاء المُبَارَاة بِذَكَاء.",
+        projectSubtitle:
+            "رَفِيقُك الذكي دَاخِل المَلعَب. احجِز، حَدِّد بَوَّابَتِك ومَقعَدِك، وعِش أَجوَاء المُبَارَاة بِذَكَاء.",
         liveScore: "النتائج المباشرة",
         upcomingMatchesHome: "المباريات القادمة",
         liveNow: "مباشر",
         saudiLeague: "دوري روشن السعودي",
-       
+
         alHilal: "الهلال",
         alNassr: "النصر",
         alRaed: "الرائد",
@@ -224,6 +171,9 @@ const TRANSLATIONS = {
         alWehda: "الوحدة",
         alFayha: "الفيحاء",
         alTaawon: "التعاون",
+        alIttihad: "الاتحاد",
+        alAhli: "الأهلي",
+        alQadsiah: "القادسية",
 
         welcome: "مرحبًا بك في ملعب خُطى",
         subtitle: "احجز المباريات، اختر مقعدك، وتنقل داخل الملعب بسهولة.",
@@ -249,20 +199,6 @@ const TRANSLATIONS = {
         tickets: "التذاكر",
         myBookings: "حجوزاتي",
         favorites: "النادي المفضل",
-        selectClub: "اختر ناديك المفضل",
-        saveFavoriteClub: "حفظ النادي المفضل",
-        upcomingMatches: "المباريات القادمة",
-        startsFrom: "تبدأ من",
-        viewDetails: "عرض التفاصيل",
-        bookTicket: "احجز التذكرة",
-        noMatches: "لا توجد مباريات قادمة لناديك المفضل حالياً.",
-        upcomingMatchesCount: "مباريات قادمة",
-        alhilal: "الهلال",
-        alnassr: "النصر",
-        alittihad: "الاتحاد",
-        alahli: "الأهلي",
-        alshabab: "الشباب",
-        alettifaq: "الاتفاق", 
         payment: "الدفع",
         seatMap: "خريطةالمقاعد",
 
@@ -294,7 +230,7 @@ const TRANSLATIONS = {
         profileSubtitle: "إدارة معلوماتك الشخصية",
         profileUpdated: "تم تحديث الملف الشخصي بنجاح",
 
-        mainTitle: "مسارك الذكي داخل الاستاد",
+        mainTitle: "الملاحة داخل الاستاد",
         mainSubtitle: "اختاري نقطة البداية والوجهة للوصول إلى أفضل مسار.",
         findRoute: "إيجاد أفضل مسار",
         backendRouting: "توجيه ذكي داخل الاستاد",
@@ -306,7 +242,8 @@ const TRANSLATIONS = {
         calculatingRoute: "جاري حساب المسار...",
         routeError: "خطأ",
         failedBackend: "فشل الاتصال بالخادم",
-        twoPointsSelected: "تم اختيار نقطتين. اضغطي إيجاد أفضل مسار لحساب المسار.",
+        twoPointsSelected:
+            "تم اختيار نقطتين. اضغطي إيجاد أفضل مسار لحساب المسار.",
         startSelected: "تم اختيار نقطة البداية. اختاري نقطة النهاية.",
         selectTwoPointsFirst: "اختاري أي نقطتين على الخريطة أولًا.",
 
@@ -315,7 +252,8 @@ const TRANSLATIONS = {
         selectStartFirst: "اختاري نقطة بداية أولًا لحساب أقرب المرافق.",
         loadingNearest: "جاري تحميل أقرب المرافق...",
         noNearbyResults: "لا توجد نتائج قريبة.",
-        clickFacilityHint: "اضغطي على أيقونة مرفق داخل الخريطة لعرض الأقرب من نفس النوع.",
+        clickFacilityHint:
+            "اضغطي على أيقونة مرفق داخل الخريطة لعرض الأقرب من نفس النوع.",
         couldNotLoadNearby: "تعذر جلب المرافق القريبة.",
         approxDistance: "المسافة التقريبية",
         distance: "المسافة",
@@ -334,7 +272,7 @@ const TRANSLATIONS = {
             exit: "مخرج طوارئ",
             prayer: "مصلى",
             gate: "بوابة دخول",
-            facility: "مرفق"
+            facility: "مرفق",
         },
 
         gateClickArea: "تم اختيار البوابة",
@@ -351,101 +289,57 @@ const TRANSLATIONS = {
 
         youReachedDestination: "وصلتِ إلى وجهتك",
         goToSection: "توجهي إلى السكشن",
-        seatGuidanceNote: "توجهي إلى السكشن المحدد وابحثي عن الصف ورقم المقعد.",
-        organizerPanel: "لوحة المنظم",
-        dashboard: "لوحة التحكم",
-
-        organizerDashboard: "لوحة تحكم المنظم",
-        organizerDashboardDesc: "إدارة المباريات ومرافق الاستاد.",
-
-        matches: "المباريات",
-        facilities: "المرافق",
-
-        manageMatches: "إدارة المباريات",
-        manageMatchesDesc: "إضافة وتحديث وإلغاء المباريات من قاعدة البيانات.",
-        addMatch: "إضافة مباراة",
-        updateMatch: "تحديث المباراة",
-        cancelEdit: "إلغاء التعديل",
-        matchAdded: "تمت إضافة المباراة بنجاح",
-        matchUpdated: "تم تحديث المباراة بنجاح",
-        matchSaveFailed: "فشل حفظ المباراة",
-        confirmCancelMatch: "هل أنت متأكدة من إلغاء هذه المباراة؟",
-        noMatchesFound: "لا توجد مباريات",
-
-        homeTeam: "الفريق المضيف",
-        awayTeam: "الفريق الضيف",
-        matchTime: "وقت المباراة",
-        stadium: "الملعب",
-        basePrice: "السعر الأساسي",
-        homeScore: "نتيجة الفريق المضيف",
-        awayScore: "نتيجة الفريق الضيف",
-        minute: "الدقيقة",
-        score: "النتيجة",
-        actions: "الإجراءات",
-        edit: "تعديل",
-        cancel: "إلغاء",
-
-        manageFacilities: "إدارة المرافق",
-        manageFacilitiesDesc: "إضافة وحذف مرافق الاستاد من قاعدة البيانات.",
-        facilityName: "اسم المرفق",
-        facilityType: "النوع",
-        geom: "الإحداثيات",
-        addFacility: "إضافة مرفق",
-        facilityAdded: "تمت إضافة المرفق بنجاح",
-        facilityAddFailed: "فشل إضافة المرفق",
-        confirmDeleteFacility: "هل أنت متأكدة من حذف هذا المرفق؟",
-        noFacilitiesFound: "لا توجد مرافق",
-        delete: "حذف"
-    }
+        seatGuidanceNote:
+            "توجهي إلى السكشن المحدد وابحثي عن الصف ورقم المقعد.",
+    },
 };
 
-const LanguageContext = createContext();
+const LanguageContext = createContext(null);
+
+function getInitialLanguage() {
+    const savedLanguage = localStorage.getItem("lang");
+
+    if (savedLanguage) {
+        return savedLanguage;
+    }
+
+    return navigator.language.startsWith(ARABIC_LANGUAGE)
+        ? ARABIC_LANGUAGE
+        : DEFAULT_LANGUAGE;
+}
+
+function getDocumentDirection(language) {
+    return language === ARABIC_LANGUAGE ? "rtl" : "ltr";
+}
 
 export function LanguageProvider({ children }) {
-    const getInitialLang = () => {
-        const savedLang = localStorage.getItem("lang");
-
-        if (savedLang) {
-            return savedLang;
-        }
-
-        return navigator.language.startsWith("ar")
-            ? "ar"
-            : "en";
-    };
-
-    const [lang, setLang] = useState(getInitialLang);
+    const [lang, setLang] = useState(getInitialLanguage);
 
     useEffect(() => {
         localStorage.setItem("lang", lang);
 
         document.documentElement.lang = lang;
-
-        document.documentElement.dir =
-            lang === "ar"
-                ? "rtl"
-                : "ltr";
+        document.documentElement.dir = getDocumentDirection(lang);
     }, [lang]);
 
     const toggleLanguage = () => {
-        setLang((current) =>
-            current === "en"
-                ? "ar"
-                : "en"
+        setLang((currentLanguage) =>
+            currentLanguage === DEFAULT_LANGUAGE ? ARABIC_LANGUAGE : DEFAULT_LANGUAGE
         );
     };
 
-    const t = TRANSLATIONS[lang];
+    const value = useMemo(
+        () => ({
+            lang,
+            setLang,
+            toggleLanguage,
+            t: TRANSLATIONS[lang],
+        }),
+        [lang]
+    );
 
     return (
-        <LanguageContext.Provider
-            value={{
-                lang,
-                setLang,
-                toggleLanguage,
-                t
-            }}
-        >
+        <LanguageContext.Provider value={value}>
             {children}
         </LanguageContext.Provider>
     );
